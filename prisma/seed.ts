@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from './generated/client'
 import exercises from './exercises.json'
+import bcrypt from 'bcryptjs'
 
 const adapter = new PrismaBetterSqlite3({
   url: 'file:./dev.db',
@@ -57,6 +58,8 @@ async function main() {
 
   console.log(`Seeded ${exerciseData.length} exercises`)
 
+  const hashedPassword = await bcrypt.hash('password123', 10)
+
   // Create a test user
   await prisma.user.upsert({
     where: { email: 'test@example.com' },
@@ -65,6 +68,7 @@ async function main() {
       email: 'test@example.com',
       name: 'Test User',
       role: 'CLIENT',
+      password: hashedPassword
     },
   })
 
