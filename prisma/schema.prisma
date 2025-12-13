@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================================================
+// USERS & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A client's workout sessions
+  workoutSessions WorkoutSession[] @relation("ClientSessions")
+
+  // Sessions where this user was the trainer
+  trainedSessions WorkoutSession[] @relation("TrainerSessions")
+
+  // Exercises created by this user
+  createdExercises Exercise[]
+
+  @@index([email])
+  @@index([role])
+}
+
+enum Role {
+  CLIENT
+  TRAINER
+  ADMIN
+}
+
+// ============================================================================
+// EXERCISE LIBRARY
+// ============================================================================
+
+model Exercise {
+  id            String         @id @default(cuid())
+  name          String
+  instructions  String?
+  category      String?
+  primaryMuscle String?
+  equipment     String?
+  images        String?
+  source        ExerciseSource @default(CUSTOM)
+  sourceId      String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+  createdById String?
+
+  setExercises SetExercise[]
+
+  @@unique([name, source, sourceId])
+  @@index([name])
+  @@index([category])
+  @@index([primaryMuscle])
+}
+
+enum ExerciseSource {
+  IMPORTED
+  CUSTOM
+}
+
+// ============================================================================
+// WORKOUT SESSIONS
+// ============================================================================
+
+model WorkoutSession {
+  id        String        @id @default(cuid())
+  date      DateTime
+  notes     String?
+  status    SessionStatus @default(IN_PROGRESS)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  client   User   @relation("ClientSessions", fields: [clientId], references: [id])
+  clientId String
+
+  trainer   User?   @relation("TrainerSessions", fields: [trainerId], references: [id])
+  trainerId String?
+
+  sets WorkoutSet[]
+
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([date])
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================================================
+// WORKOUT SETS
+// ============================================================================
+
+model WorkoutSet {
+  id        String   @id @default(cuid())
+  order     Int
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  workoutSessionId String
+
+  exercises SetExercise[]
+
+  @@index([workoutSessionId])
+}
+
+// ============================================================================
+// SET EXERCISES
+// ============================================================================
+
+model SetExercise {
+  id             String   @id @default(cuid())
+  order          Int
+  modifier       String?
+  targetReps     Int?
+  targetWeight   Float?
+  targetDuration Int?
+  actualReps     Int?
+  actualWeight   Float?
+  actualDuration Int?
+  completed      Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId String
+
+  workoutSet   WorkoutSet @relation(fields: [workoutSetId], references: [id], onDelete: Cascade)
+  workoutSetId String
+
+  @@index([exerciseId])
+  @@index([workoutSetId])
+}
