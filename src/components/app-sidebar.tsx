@@ -47,7 +47,7 @@ export function AppSidebar() {
   const { data: session } = useSession()
 
   return (
-    <Sidebar>
+    <Sidebar className="hidden md:flex">
       <SidebarHeader className="p-4">
         <h1 className="text-xl font-bold">GymTracker</h1>
       </SidebarHeader>
