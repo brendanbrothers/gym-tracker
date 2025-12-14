@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "reset-dummy": "tsx prisma/reset-with-dummy-data.ts"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.1.0",
@@ -28,6 +29,7 @@
     "next-auth": "^4.24.13",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "recharts": "^3.5.1",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
