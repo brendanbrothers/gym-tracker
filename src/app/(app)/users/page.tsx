@@ -1,3 +1,5 @@
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import {
   Table,
@@ -7,15 +9,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { UserForm } from "./user-form"
 
 export default async function UsersPage() {
+  const session = await getServerSession(authOptions)
   const users = await prisma.user.findMany({
     orderBy: { name: "asc" },
   })
 
+  const canManageUsers = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Users</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Users</h1>
+        {canManageUsers && <UserForm />}
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

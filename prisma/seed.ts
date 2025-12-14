@@ -58,21 +58,34 @@ async function main() {
 
   console.log(`Seeded ${exerciseData.length} exercises`)
 
-  const hashedPassword = await bcrypt.hash('password123', 10)
+// Create a trainer user
+const trainerPassword = await bcrypt.hash('trainer123', 10)
+await prisma.user.upsert({
+  where: { email: 'trainer@example.com' },
+  update: {},
+  create: {
+    email: 'trainer@example.com',
+    name: 'Test Trainer',
+    password: trainerPassword,
+    role: 'TRAINER',
+  },
+})
 
-  // Create a test user
-  await prisma.user.upsert({
-    where: { email: 'test@example.com' },
-    update: {},
-    create: {
-      email: 'test@example.com',
-      name: 'Test User',
-      role: 'CLIENT',
-      password: hashedPassword
-    },
-  })
+// Create a client user
+const clientPassword = await bcrypt.hash('client123', 10)
+await prisma.user.upsert({
+  where: { email: 'client@example.com' },
+  update: {},
+  create: {
+    email: 'client@example.com',
+    name: 'Test Client',
+    password: clientPassword,
+    role: 'CLIENT',
+  },
+})
 
-  console.log('Created test user')
+console.log('Created test users')
+
 }
 
 main()
