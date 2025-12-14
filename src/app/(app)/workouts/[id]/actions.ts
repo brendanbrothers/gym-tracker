@@ -166,3 +166,26 @@ export async function updateExerciseTargets(
   
     return { success: true }
   }
+
+  export async function createExercise(formData: FormData) {
+    const name = formData.get("name") as string
+    const category = formData.get("category") as string | null
+    const primaryMuscle = formData.get("primaryMuscle") as string | null
+    const equipment = formData.get("equipment") as string | null
+  
+    if (!name) {
+      return { error: "Name is required" }
+    }
+  
+    const exercise = await prisma.exercise.create({
+      data: {
+        name,
+        category: category || null,
+        primaryMuscle: primaryMuscle || null,
+        equipment: equipment || null,
+        source: "CUSTOM",
+      },
+    })
+  
+    return { success: true, exercise }
+  }

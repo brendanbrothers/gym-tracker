@@ -1,5 +1,6 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/db"
 
 export async function getExercises(params: {
@@ -55,4 +56,57 @@ export async function getFilterOptions() {
     muscles: muscles.map((m) => m.primaryMuscle as string),
     equipment: equipmentList.map((e) => e.equipment as string),
   }
+}
+
+export async function createExercise(formData: FormData) {
+  const name = formData.get("name") as string
+  const category = formData.get("category") as string | null
+  const primaryMuscle = formData.get("primaryMuscle") as string | null
+  const equipment = formData.get("equipment") as string | null
+
+  if (!name) {
+    return { error: "Name is required" }
+  }
+
+  // Check for duplicate name
+  const existing = await prisma.exercise.findFirst({
+    where: { name: { equals: name } },
+  })
+
+  if (existing) {
+    return { error: "An exercise with this name already exists" }
+  }
+
+  const exercise = await prisma.exercise.create({
+    data: {
+      name,
+      category: category || null,
+      primaryMuscle: primaryMuscle || null,
+      equipment: equipment || null,
+      source: "CUSTOM",
+    },
+  })
+
+  revalidatePath("/exercises")
+  return { success: true, exercise }
+}
+
+export async function deleteExercise(exerciseId: string) {
+  // Check if exercise is used in any workout
+  const usageCount = await prisma.setExercise.count({
+    where: { exerciseId },
+  })
+
+  if (usageCount > 0) {
+    return { 
+      error: `Cannot delete: this exercise is used in ${usageCount} workout${usageCount > 1 ? "s" : ""}` 
+    }
+  }
+
+  await prisma.exercise.delete({
+    where: { id: exerciseId },
+  })
+
+  revalidatePath("/exercises")
+  return { success: true }
 }

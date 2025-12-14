@@ -48,7 +48,14 @@ import {
   completeWorkout,
   updateAllRoundsTargets,
   deleteWorkout,
+  createExercise,
 } from "./actions"
+
+import {
+    EXERCISE_CATEGORIES,
+    PRIMARY_MUSCLES,
+    EQUIPMENT,
+  } from "@/lib/constants"
 
 type Exercise = {
   id: string
@@ -459,101 +466,235 @@ function RoundRow({
 }
 
 function AddExerciseDialog({
-  setId,
-  workoutId,
-  exercises,
-}: {
-  setId: string
-  workoutId: string
-  exercises: Exercise[]
-}) {
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState("")
-
-  const filteredExercises = exercises.filter((e) =>
-    e.name.toLowerCase().includes(search.toLowerCase())
-  )
-
-  async function handleSubmit(formData: FormData) {
-    await addExerciseToSet(setId, workoutId, formData)
-    setOpen(false)
-    setSearch("")
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Exercise
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Exercise</DialogTitle>
-        </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Search Exercise</Label>
-            <Input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="exerciseId">Exercise</Label>
-            <Select name="exerciseId" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select exercise" />
-              </SelectTrigger>
-              <SelectContent className="max-h-48">
-                {filteredExercises.map((exercise) => (
-                  <SelectItem key={exercise.id} value={exercise.id}>
-                    {exercise.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="modifier">Modifier (optional)</Label>
-            <Input
-              id="modifier"
-              name="modifier"
-              placeholder="e.g., start at 10, slow tempo"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="rounds">Rounds</Label>
-            <Input
-              id="rounds"
-              name="rounds"
-              type="number"
-              defaultValue={3}
-              min={1}
-              max={10}
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-2">
-              <Label htmlFor="targetReps">Target Reps</Label>
-              <Input id="targetReps" name="targetReps" type="number" min={0} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="targetWeight">Weight (lbs)</Label>
-              <Input id="targetWeight" name="targetWeight" type="number" min={0} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="targetDuration">Duration (s)</Label>
-              <Input id="targetDuration" name="targetDuration" type="number" min={0} />
-            </div>
-          </div>
-          <Button type="submit" className="w-full">
-            Add to Set
+    setId,
+    workoutId,
+    exercises,
+  }: {
+    setId: string
+    workoutId: string
+    exercises: Exercise[]
+  }) {
+    const [open, setOpen] = useState(false)
+    const [search, setSearch] = useState("")
+    const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+    const [showResults, setShowResults] = useState(false)
+    const [showNewExerciseForm, setShowNewExerciseForm] = useState(false)
+  
+    const filteredExercises = exercises.filter((e) =>
+      e.name.toLowerCase().includes(search.toLowerCase())
+    )
+  
+    async function handleSubmit(formData: FormData) {
+      if (!selectedExercise) return
+      formData.set("exerciseId", selectedExercise.id)
+      await addExerciseToSet(setId, workoutId, formData)
+      setOpen(false)
+      setSearch("")
+      setSelectedExercise(null)
+    }
+  
+    async function handleCreateExercise(formData: FormData) {
+      const result = await createExercise(formData)
+      if (result.success && result.exercise) {
+        setSelectedExercise(result.exercise)
+        setSearch(result.exercise.name)
+        setShowNewExerciseForm(false)
+      }
+    }
+  
+    function handleOpenChange(isOpen: boolean) {
+      setOpen(isOpen)
+      if (!isOpen) {
+        setSearch("")
+        setSelectedExercise(null)
+        setShowResults(false)
+        setShowNewExerciseForm(false)
+      }
+    }
+  
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Exercise
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Exercise</DialogTitle>
+          </DialogHeader>
+  
+{showNewExerciseForm ? (
+  <form action={handleCreateExercise} className="space-y-4">
+    <div className="space-y-2">
+      <Label htmlFor="name">Exercise Name</Label>
+      <Input
+        id="name"
+        name="name"
+        required
+        defaultValue={search}
+        placeholder="e.g., Romanian Deadlift"
+      />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="category">Category</Label>
+      <Select name="category">
+        <SelectTrigger>
+          <SelectValue placeholder="Select category" />
+        </SelectTrigger>
+        <SelectContent>
+          {EXERCISE_CATEGORIES.map((cat) => (
+            <SelectItem key={cat} value={cat}>
+              {cat}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="primaryMuscle">Primary Muscle</Label>
+      <Select name="primaryMuscle">
+        <SelectTrigger>
+          <SelectValue placeholder="Select muscle" />
+        </SelectTrigger>
+        <SelectContent>
+          {PRIMARY_MUSCLES.map((muscle) => (
+            <SelectItem key={muscle} value={muscle}>
+              {muscle}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="equipment">Equipment</Label>
+      <Select name="equipment">
+        <SelectTrigger>
+          <SelectValue placeholder="Select equipment" />
+        </SelectTrigger>
+        <SelectContent>
+          {EQUIPMENT.map((equip) => (
+            <SelectItem key={equip} value={equip}>
+              {equip}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="flex gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        className="flex-1"
+        onClick={() => setShowNewExerciseForm(false)}
+      >
+        Cancel
+      </Button>
+      <Button type="submit" className="flex-1">
+        Create Exercise
+      </Button>
+    </div>
+  </form>
+) : (
+            <form action={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Exercise</Label>
+                <div className="relative">
+                  <Input
+                    placeholder="Type to search exercises..."
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value)
+                      setSelectedExercise(null)
+                      setShowResults(true)
+                    }}
+                    onFocus={() => setShowResults(true)}
+                  />
+                  {showResults && search && !selectedExercise && (
+                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {filteredExercises.length > 0 ? (
+                        filteredExercises.slice(0, 10).map((exercise) => (
+                          <button
+                            key={exercise.id}
+                            type="button"
+                            className="w-full px-3 py-2 text-left hover:bg-muted text-sm"
+                            onClick={() => {
+                              setSelectedExercise(exercise)
+                              setSearch(exercise.name)
+                              setShowResults(false)
+                            }}
+                          >
+                            <span className="font-medium">{exercise.name}</span>
+                            {exercise.primaryMuscle && (
+                              <span className="text-muted-foreground ml-2">
+                                ({exercise.primaryMuscle})
+                              </span>
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No exercises found
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left hover:bg-muted text-sm border-t flex items-center gap-2 text-primary"
+                        onClick={() => setShowNewExerciseForm(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create &quot;{search}&quot; as new exercise
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {selectedExercise && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {selectedExercise.name}
+                    {selectedExercise.primaryMuscle && ` (${selectedExercise.primaryMuscle})`}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="modifier">Modifier (optional)</Label>
+                <Input
+                  id="modifier"
+                  name="modifier"
+                  placeholder="e.g., start at 10, slow tempo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rounds">Rounds</Label>
+                <Input
+                  id="rounds"
+                  name="rounds"
+                  type="number"
+                  defaultValue={3}
+                  min={1}
+                  max={10}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="targetReps">Target Reps</Label>
+                  <Input id="targetReps" name="targetReps" type="number" min={0} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetWeight">Weight (lbs)</Label>
+                  <Input id="targetWeight" name="targetWeight" type="number" min={0} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetDuration">Duration (s)</Label>
+                  <Input id="targetDuration" name="targetDuration" type="number" min={0} />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={!selectedExercise}>
+                Add to Set
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    )
+  }
