@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,12 +19,24 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { createWorkout } from "./actions"
+import { createWorkout, getRecentWorkoutsForClient } from "./actions"
 
 type User = {
   id: string
   name: string
   role: string
+}
+
+type RecentWorkout = {
+  id: string
+  date: Date
+  sets: {
+    exercises: {
+      exercise: {
+        name: string
+      }
+    }[]
+  }[]
 }
 
 export function NewWorkoutForm({
@@ -37,6 +49,22 @@ export function NewWorkoutForm({
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [selectedClient, setSelectedClient] = useState<string>("")
+  const [recentWorkouts, setRecentWorkouts] = useState<RecentWorkout[]>([])
+  const [loadingWorkouts, setLoadingWorkouts] = useState(false)
+
+  useEffect(() => {
+    if (!selectedClient) {
+      setRecentWorkouts([])
+      return
+    }
+
+    setLoadingWorkouts(true)
+    getRecentWorkoutsForClient(selectedClient).then((workouts) => {
+      setRecentWorkouts(workouts)
+      setLoadingWorkouts(false)
+    })
+  }, [selectedClient])
 
   async function handleSubmit(formData: FormData) {
     setError("")
@@ -51,6 +79,18 @@ export function NewWorkoutForm({
     }
   }
 
+  function formatWorkoutSummary(workout: RecentWorkout) {
+    const exerciseNames = new Set<string>()
+    workout.sets.forEach((set) => {
+      set.exercises.forEach((ex) => {
+        exerciseNames.add(ex.exercise.name)
+      })
+    })
+    const names = Array.from(exerciseNames).slice(0, 3).join(", ")
+    const more = exerciseNames.size > 3 ? ` +${exerciseNames.size - 3} more` : ""
+    return `${new Date(workout.date).toLocaleDateString()} - ${names}${more}`
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -63,7 +103,12 @@ export function NewWorkoutForm({
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="clientId">Client</Label>
-            <Select name="clientId" required>
+            <Select
+              name="clientId"
+              required
+              value={selectedClient}
+              onValueChange={setSelectedClient}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
@@ -86,6 +131,30 @@ export function NewWorkoutForm({
                 {trainers.map((trainer) => (
                   <SelectItem key={trainer.id} value={trainer.id}>
                     {trainer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>
+            <Select name="copyFromId" disabled={!selectedClient || loadingWorkouts}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !selectedClient
+                      ? "Select a client first"
+                      : loadingWorkouts
+                      ? "Loading..."
+                      : "Start fresh"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Start fresh</SelectItem>
+                {recentWorkouts.map((workout) => (
+                  <SelectItem key={workout.id} value={workout.id}>
+                    {formatWorkoutSummary(workout)}
                   </SelectItem>
                 ))}
               </SelectContent>

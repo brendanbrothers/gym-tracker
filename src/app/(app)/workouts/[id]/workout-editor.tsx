@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Check } from "lucide-react"
+import { Pencil, Plus, Trash2, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +27,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import {
   addSet,
@@ -35,6 +46,8 @@ import {
   updateExercise,
   deleteExercise,
   completeWorkout,
+  updateAllRoundsTargets,
+  deleteWorkout,
 } from "./actions"
 
 type Exercise = {
@@ -56,6 +69,7 @@ type SetExercise = {
   actualWeight: number | null
   actualDuration: number | null
   completed: boolean
+  workoutSetId: string
   exercise: Exercise
 }
 
@@ -97,6 +111,33 @@ export function WorkoutEditor({
           </p>
         </div>
         <div className="flex gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this workout?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete this workout and all its sets and exercises. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+  onClick={async () => {
+    await deleteWorkout(workout.id)
+    router.push("/workouts")
+  }}
+>
+  Delete
+</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {!isCompleted && (
             <Button
               variant="default"
@@ -152,7 +193,6 @@ function SetCard({
   exercises: Exercise[]
   disabled: boolean
 }) {
-  // Group exercises by order (same exercise across rounds)
   const groupedExercises = set.exercises.reduce((acc, ex) => {
     const key = ex.order
     if (!acc[key]) {
@@ -167,13 +207,27 @@ function SetCard({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Set {set.order}</CardTitle>
         {!disabled && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => deleteSet(set.id, workoutId)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Set {set.order}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete all exercises in this set. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteSet(set.id, workoutId)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
@@ -207,6 +261,18 @@ function ExerciseGroup({
   disabled: boolean
 }) {
   const first = rounds[0]
+  const [editOpen, setEditOpen] = useState(false)
+
+  async function handleEditSubmit(formData: FormData) {
+    await updateAllRoundsTargets(
+      first.workoutSetId,
+      first.exercise.id,
+      first.order,
+      workoutId,
+      formData
+    )
+    setEditOpen(false)
+  }
 
   return (
     <div className="border rounded-lg p-3 space-y-2">
@@ -224,15 +290,91 @@ function ExerciseGroup({
           </p>
         </div>
         {!disabled && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              rounds.forEach((r) => deleteExercise(r.id, workoutId))
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit {first.exercise.name}</DialogTitle>
+                </DialogHeader>
+                <form action={handleEditSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="modifier">Modifier</Label>
+                    <Input
+                      id="modifier"
+                      name="modifier"
+                      defaultValue={first.modifier || ""}
+                      placeholder="e.g., start at 10, slow tempo"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="targetReps">Target Reps</Label>
+                      <Input
+                        id="targetReps"
+                        name="targetReps"
+                        type="number"
+                        min={0}
+                        defaultValue={first.targetReps || ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetWeight">Weight (lbs)</Label>
+                      <Input
+                        id="targetWeight"
+                        name="targetWeight"
+                        type="number"
+                        min={0}
+                        defaultValue={first.targetWeight || ""}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetDuration">Duration (s)</Label>
+                      <Input
+                        id="targetDuration"
+                        name="targetDuration"
+                        type="number"
+                        min={0}
+                        defaultValue={first.targetDuration || ""}
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Update All Rounds
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {first.exercise.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete all {rounds.length} round{rounds.length > 1 ? "s" : ""} of this exercise. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      rounds.forEach((r) => deleteExercise(r.id, workoutId))
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
       <div className="grid gap-2">
@@ -282,6 +424,7 @@ function RoundRow({
         <>
           <Input
             type="number"
+            min={0}
             placeholder="Reps"
             value={actualReps}
             onChange={(e) => setActualReps(e.target.value)}
@@ -289,6 +432,7 @@ function RoundRow({
           />
           <Input
             type="number"
+            min={0}
             placeholder="Weight"
             value={actualWeight}
             onChange={(e) => setActualWeight(e.target.value)}
@@ -394,15 +538,15 @@ function AddExerciseDialog({
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-2">
               <Label htmlFor="targetReps">Target Reps</Label>
-              <Input id="targetReps" name="targetReps" type="number" />
+              <Input id="targetReps" name="targetReps" type="number" min={0} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="targetWeight">Weight (lbs)</Label>
-              <Input id="targetWeight" name="targetWeight" type="number" />
+              <Input id="targetWeight" name="targetWeight" type="number" min={0} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="targetDuration">Duration (s)</Label>
-              <Input id="targetDuration" name="targetDuration" type="number" />
+              <Input id="targetDuration" name="targetDuration" type="number" min={0} />
             </div>
           </div>
           <Button type="submit" className="w-full">

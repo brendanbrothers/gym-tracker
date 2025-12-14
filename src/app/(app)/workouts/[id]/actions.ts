@@ -106,3 +106,63 @@ export async function completeWorkout(workoutId: string) {
 
   revalidatePath(`/workouts/${workoutId}`)
 }
+
+export async function updateExerciseTargets(
+    exerciseId: string,
+    workoutId: string,
+    formData: FormData
+  ) {
+    const targetReps = formData.get("targetReps") as string | null
+    const targetWeight = formData.get("targetWeight") as string | null
+    const targetDuration = formData.get("targetDuration") as string | null
+    const modifier = formData.get("modifier") as string | null
+  
+    await prisma.setExercise.update({
+      where: { id: exerciseId },
+      data: {
+        targetReps: targetReps ? parseInt(targetReps) : null,
+        targetWeight: targetWeight ? parseFloat(targetWeight) : null,
+        targetDuration: targetDuration ? parseInt(targetDuration) : null,
+        modifier: modifier || null,
+      },
+    })
+  
+    revalidatePath(`/workouts/${workoutId}`)
+  }
+  
+  export async function updateAllRoundsTargets(
+    setId: string,
+    exerciseId: string,
+    order: number,
+    workoutId: string,
+    formData: FormData
+  ) {
+    const targetReps = formData.get("targetReps") as string | null
+    const targetWeight = formData.get("targetWeight") as string | null
+    const targetDuration = formData.get("targetDuration") as string | null
+    const modifier = formData.get("modifier") as string | null
+  
+    await prisma.setExercise.updateMany({
+      where: {
+        workoutSetId: setId,
+        exerciseId,
+        order,
+      },
+      data: {
+        targetReps: targetReps ? parseInt(targetReps) : null,
+        targetWeight: targetWeight ? parseFloat(targetWeight) : null,
+        targetDuration: targetDuration ? parseInt(targetDuration) : null,
+        modifier: modifier || null,
+      },
+    })
+  
+    revalidatePath(`/workouts/${workoutId}`)
+  }
+
+  export async function deleteWorkout(workoutId: string) {
+    await prisma.workoutSession.delete({
+      where: { id: workoutId },
+    })
+  
+    return { success: true }
+  }
