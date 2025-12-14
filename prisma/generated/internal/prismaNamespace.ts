@@ -875,6 +875,7 @@ export type WorkoutSetScalarFieldEnum = (typeof WorkoutSetScalarFieldEnum)[keyof
 export const SetExerciseScalarFieldEnum = {
   id: 'id',
   order: 'order',
+  round: 'round',
   modifier: 'modifier',
   targetReps: 'targetReps',
   targetWeight: 'targetWeight',

@@ -130,6 +130,7 @@ model WorkoutSet {
 model SetExercise {
   id             String   @id @default(cuid())
   order          Int
+  round          Int      @default(1)
   modifier       String?
   targetReps     Int?
   targetWeight   Float?

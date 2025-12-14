@@ -28,6 +28,7 @@ export type AggregateSetExercise = {
 
 export type SetExerciseAvgAggregateOutputType = {
   order: number | null
+  round: number | null
   targetReps: number | null
   targetWeight: number | null
   targetDuration: number | null
@@ -38,6 +39,7 @@ export type SetExerciseAvgAggregateOutputType = {
 
 export type SetExerciseSumAggregateOutputType = {
   order: number | null
+  round: number | null
   targetReps: number | null
   targetWeight: number | null
   targetDuration: number | null
@@ -49,6 +51,7 @@ export type SetExerciseSumAggregateOutputType = {
 export type SetExerciseMinAggregateOutputType = {
   id: string | null
   order: number | null
+  round: number | null
   modifier: string | null
   targetReps: number | null
   targetWeight: number | null
@@ -67,6 +70,7 @@ export type SetExerciseMinAggregateOutputType = {
 export type SetExerciseMaxAggregateOutputType = {
   id: string | null
   order: number | null
+  round: number | null
   modifier: string | null
   targetReps: number | null
   targetWeight: number | null
@@ -85,6 +89,7 @@ export type SetExerciseMaxAggregateOutputType = {
 export type SetExerciseCountAggregateOutputType = {
   id: number
   order: number
+  round: number
   modifier: number
   targetReps: number
   targetWeight: number
@@ -104,6 +109,7 @@ export type SetExerciseCountAggregateOutputType = {
 
 export type SetExerciseAvgAggregateInputType = {
   order?: true
+  round?: true
   targetReps?: true
   targetWeight?: true
   targetDuration?: true
@@ -114,6 +120,7 @@ export type SetExerciseAvgAggregateInputType = {
 
 export type SetExerciseSumAggregateInputType = {
   order?: true
+  round?: true
   targetReps?: true
   targetWeight?: true
   targetDuration?: true
@@ -125,6 +132,7 @@ export type SetExerciseSumAggregateInputType = {
 export type SetExerciseMinAggregateInputType = {
   id?: true
   order?: true
+  round?: true
   modifier?: true
   targetReps?: true
   targetWeight?: true
@@ -143,6 +151,7 @@ export type SetExerciseMinAggregateInputType = {
 export type SetExerciseMaxAggregateInputType = {
   id?: true
   order?: true
+  round?: true
   modifier?: true
   targetReps?: true
   targetWeight?: true
@@ -161,6 +170,7 @@ export type SetExerciseMaxAggregateInputType = {
 export type SetExerciseCountAggregateInputType = {
   id?: true
   order?: true
+  round?: true
   modifier?: true
   targetReps?: true
   targetWeight?: true
@@ -266,6 +276,7 @@ export type SetExerciseGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type SetExerciseGroupByOutputType = {
   id: string
   order: number
+  round: number
   modifier: string | null
   targetReps: number | null
   targetWeight: number | null
@@ -307,6 +318,7 @@ export type SetExerciseWhereInput = {
   NOT?: Prisma.SetExerciseWhereInput | Prisma.SetExerciseWhereInput[]
   id?: Prisma.StringFilter<"SetExercise"> | string
   order?: Prisma.IntFilter<"SetExercise"> | number
+  round?: Prisma.IntFilter<"SetExercise"> | number
   modifier?: Prisma.StringNullableFilter<"SetExercise"> | string | null
   targetReps?: Prisma.IntNullableFilter<"SetExercise"> | number | null
   targetWeight?: Prisma.FloatNullableFilter<"SetExercise"> | number | null
@@ -327,6 +339,7 @@ export type SetExerciseWhereInput = {
 export type SetExerciseOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   modifier?: Prisma.SortOrderInput | Prisma.SortOrder
   targetReps?: Prisma.SortOrderInput | Prisma.SortOrder
   targetWeight?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -350,6 +363,7 @@ export type SetExerciseWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.SetExerciseWhereInput[]
   NOT?: Prisma.SetExerciseWhereInput | Prisma.SetExerciseWhereInput[]
   order?: Prisma.IntFilter<"SetExercise"> | number
+  round?: Prisma.IntFilter<"SetExercise"> | number
   modifier?: Prisma.StringNullableFilter<"SetExercise"> | string | null
   targetReps?: Prisma.IntNullableFilter<"SetExercise"> | number | null
   targetWeight?: Prisma.FloatNullableFilter<"SetExercise"> | number | null
@@ -370,6 +384,7 @@ export type SetExerciseWhereUniqueInput = Prisma.AtLeast<{
 export type SetExerciseOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   modifier?: Prisma.SortOrderInput | Prisma.SortOrder
   targetReps?: Prisma.SortOrderInput | Prisma.SortOrder
   targetWeight?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -396,6 +411,7 @@ export type SetExerciseScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SetExerciseScalarWhereWithAggregatesInput | Prisma.SetExerciseScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"SetExercise"> | string
   order?: Prisma.IntWithAggregatesFilter<"SetExercise"> | number
+  round?: Prisma.IntWithAggregatesFilter<"SetExercise"> | number
   modifier?: Prisma.StringNullableWithAggregatesFilter<"SetExercise"> | string | null
   targetReps?: Prisma.IntNullableWithAggregatesFilter<"SetExercise"> | number | null
   targetWeight?: Prisma.FloatNullableWithAggregatesFilter<"SetExercise"> | number | null
@@ -414,6 +430,7 @@ export type SetExerciseScalarWhereWithAggregatesInput = {
 export type SetExerciseCreateInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -432,6 +449,7 @@ export type SetExerciseCreateInput = {
 export type SetExerciseUncheckedCreateInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -450,6 +468,7 @@ export type SetExerciseUncheckedCreateInput = {
 export type SetExerciseUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -468,6 +487,7 @@ export type SetExerciseUpdateInput = {
 export type SetExerciseUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -486,6 +506,7 @@ export type SetExerciseUncheckedUpdateInput = {
 export type SetExerciseCreateManyInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -504,6 +525,7 @@ export type SetExerciseCreateManyInput = {
 export type SetExerciseUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -520,6 +542,7 @@ export type SetExerciseUpdateManyMutationInput = {
 export type SetExerciseUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -548,6 +571,7 @@ export type SetExerciseOrderByRelationAggregateInput = {
 export type SetExerciseCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   modifier?: Prisma.SortOrder
   targetReps?: Prisma.SortOrder
   targetWeight?: Prisma.SortOrder
@@ -565,6 +589,7 @@ export type SetExerciseCountOrderByAggregateInput = {
 
 export type SetExerciseAvgOrderByAggregateInput = {
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   targetReps?: Prisma.SortOrder
   targetWeight?: Prisma.SortOrder
   targetDuration?: Prisma.SortOrder
@@ -576,6 +601,7 @@ export type SetExerciseAvgOrderByAggregateInput = {
 export type SetExerciseMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   modifier?: Prisma.SortOrder
   targetReps?: Prisma.SortOrder
   targetWeight?: Prisma.SortOrder
@@ -594,6 +620,7 @@ export type SetExerciseMaxOrderByAggregateInput = {
 export type SetExerciseMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   modifier?: Prisma.SortOrder
   targetReps?: Prisma.SortOrder
   targetWeight?: Prisma.SortOrder
@@ -611,6 +638,7 @@ export type SetExerciseMinOrderByAggregateInput = {
 
 export type SetExerciseSumOrderByAggregateInput = {
   order?: Prisma.SortOrder
+  round?: Prisma.SortOrder
   targetReps?: Prisma.SortOrder
   targetWeight?: Prisma.SortOrder
   targetDuration?: Prisma.SortOrder
@@ -722,6 +750,7 @@ export type NullableFloatFieldUpdateOperationsInput = {
 export type SetExerciseCreateWithoutExerciseInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -739,6 +768,7 @@ export type SetExerciseCreateWithoutExerciseInput = {
 export type SetExerciseUncheckedCreateWithoutExerciseInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -784,6 +814,7 @@ export type SetExerciseScalarWhereInput = {
   NOT?: Prisma.SetExerciseScalarWhereInput | Prisma.SetExerciseScalarWhereInput[]
   id?: Prisma.StringFilter<"SetExercise"> | string
   order?: Prisma.IntFilter<"SetExercise"> | number
+  round?: Prisma.IntFilter<"SetExercise"> | number
   modifier?: Prisma.StringNullableFilter<"SetExercise"> | string | null
   targetReps?: Prisma.IntNullableFilter<"SetExercise"> | number | null
   targetWeight?: Prisma.FloatNullableFilter<"SetExercise"> | number | null
@@ -802,6 +833,7 @@ export type SetExerciseScalarWhereInput = {
 export type SetExerciseCreateWithoutWorkoutSetInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -819,6 +851,7 @@ export type SetExerciseCreateWithoutWorkoutSetInput = {
 export type SetExerciseUncheckedCreateWithoutWorkoutSetInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -861,6 +894,7 @@ export type SetExerciseUpdateManyWithWhereWithoutWorkoutSetInput = {
 export type SetExerciseCreateManyExerciseInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -878,6 +912,7 @@ export type SetExerciseCreateManyExerciseInput = {
 export type SetExerciseUpdateWithoutExerciseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -895,6 +930,7 @@ export type SetExerciseUpdateWithoutExerciseInput = {
 export type SetExerciseUncheckedUpdateWithoutExerciseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -912,6 +948,7 @@ export type SetExerciseUncheckedUpdateWithoutExerciseInput = {
 export type SetExerciseUncheckedUpdateManyWithoutExerciseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -929,6 +966,7 @@ export type SetExerciseUncheckedUpdateManyWithoutExerciseInput = {
 export type SetExerciseCreateManyWorkoutSetInput = {
   id?: string
   order: number
+  round?: number
   modifier?: string | null
   targetReps?: number | null
   targetWeight?: number | null
@@ -946,6 +984,7 @@ export type SetExerciseCreateManyWorkoutSetInput = {
 export type SetExerciseUpdateWithoutWorkoutSetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -963,6 +1002,7 @@ export type SetExerciseUpdateWithoutWorkoutSetInput = {
 export type SetExerciseUncheckedUpdateWithoutWorkoutSetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -980,6 +1020,7 @@ export type SetExerciseUncheckedUpdateWithoutWorkoutSetInput = {
 export type SetExerciseUncheckedUpdateManyWithoutWorkoutSetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
+  round?: Prisma.IntFieldUpdateOperationsInput | number
   modifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetReps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetWeight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -999,6 +1040,7 @@ export type SetExerciseUncheckedUpdateManyWithoutWorkoutSetInput = {
 export type SetExerciseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   order?: boolean
+  round?: boolean
   modifier?: boolean
   targetReps?: boolean
   targetWeight?: boolean
@@ -1019,6 +1061,7 @@ export type SetExerciseSelect<ExtArgs extends runtime.Types.Extensions.InternalA
 export type SetExerciseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   order?: boolean
+  round?: boolean
   modifier?: boolean
   targetReps?: boolean
   targetWeight?: boolean
@@ -1039,6 +1082,7 @@ export type SetExerciseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
 export type SetExerciseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   order?: boolean
+  round?: boolean
   modifier?: boolean
   targetReps?: boolean
   targetWeight?: boolean
@@ -1059,6 +1103,7 @@ export type SetExerciseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type SetExerciseSelectScalar = {
   id?: boolean
   order?: boolean
+  round?: boolean
   modifier?: boolean
   targetReps?: boolean
   targetWeight?: boolean
@@ -1074,7 +1119,7 @@ export type SetExerciseSelectScalar = {
   workoutSetId?: boolean
 }
 
-export type SetExerciseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "order" | "modifier" | "targetReps" | "targetWeight" | "targetDuration" | "actualReps" | "actualWeight" | "actualDuration" | "completed" | "notes" | "createdAt" | "updatedAt" | "exerciseId" | "workoutSetId", ExtArgs["result"]["setExercise"]>
+export type SetExerciseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "order" | "round" | "modifier" | "targetReps" | "targetWeight" | "targetDuration" | "actualReps" | "actualWeight" | "actualDuration" | "completed" | "notes" | "createdAt" | "updatedAt" | "exerciseId" | "workoutSetId", ExtArgs["result"]["setExercise"]>
 export type SetExerciseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   exercise?: boolean | Prisma.ExerciseDefaultArgs<ExtArgs>
   workoutSet?: boolean | Prisma.WorkoutSetDefaultArgs<ExtArgs>
@@ -1097,6 +1142,7 @@ export type $SetExercisePayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     order: number
+    round: number
     modifier: string | null
     targetReps: number | null
     targetWeight: number | null
@@ -1537,6 +1583,7 @@ export interface Prisma__SetExerciseClient<T, Null = never, ExtArgs extends runt
 export interface SetExerciseFieldRefs {
   readonly id: Prisma.FieldRef<"SetExercise", 'String'>
   readonly order: Prisma.FieldRef<"SetExercise", 'Int'>
+  readonly round: Prisma.FieldRef<"SetExercise", 'Int'>
   readonly modifier: Prisma.FieldRef<"SetExercise", 'String'>
   readonly targetReps: Prisma.FieldRef<"SetExercise", 'Int'>
   readonly targetWeight: Prisma.FieldRef<"SetExercise", 'Float'>
