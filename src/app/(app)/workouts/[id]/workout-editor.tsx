@@ -89,7 +89,7 @@ export function WorkoutEditor({
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">
-            Workout - {workout.date.toLocaleDateString()}
+            Workout - {new Date(workout.date).toLocaleDateString("en-US")}
           </h1>
           <p className="text-muted-foreground">
             Client: {workout.client.name}

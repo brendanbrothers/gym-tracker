@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth"
+import Link from "next/link"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import {
@@ -63,15 +64,37 @@ export default async function WorkoutsPage() {
           </TableHeader>
           <TableBody>
             {workouts.map((workout) => (
-              <TableRow key={workout.id}>
-                <TableCell>{workout.date.toLocaleDateString()}</TableCell>
-                <TableCell>{workout.client.name}</TableCell>
-                <TableCell>{workout.trainer?.name || "-"}</TableCell>
-                <TableCell>{workout.sets.length}</TableCell>
+              <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                 <TableCell>
-                  {workout.sets.reduce((acc, set) => acc + set.exercises.length, 0)}
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.date.toLocaleDateString()}
+                  </Link>
                 </TableCell>
-                <TableCell>{workout.status}</TableCell>
+                <TableCell>
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.client.name}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.trainer?.name || "-"}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.sets.length}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.sets.reduce((acc, set) => acc + set.exercises.length, 0)}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/workouts/${workout.id}`} className="block">
+                    {workout.status}
+                  </Link>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
