@@ -95,7 +95,17 @@ export default async function WorkoutsPage() {
                 </TableCell>
                 <TableCell>
                   <Link href={`/workouts/${workout.id}`} className="block">
-                    {workout.status}
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        workout.status === "COMPLETED"
+                          ? "bg-green-100 text-green-800"
+                          : workout.status === "IN_PROGRESS"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {workout.status.replace("_", " ")}
+                    </span>
                   </Link>
                 </TableCell>
               </TableRow>
