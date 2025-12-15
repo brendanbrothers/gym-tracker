@@ -619,6 +619,7 @@ export type ExerciseCreateOrConnectWithoutCreatedByInput = {
 
 export type ExerciseCreateManyCreatedByInputEnvelope = {
   data: Prisma.ExerciseCreateManyCreatedByInput | Prisma.ExerciseCreateManyCreatedByInput[]
+  skipDuplicates?: boolean
 }
 
 export type ExerciseUpsertWithWhereUniqueWithoutCreatedByInput = {
@@ -1598,6 +1599,7 @@ export type ExerciseCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many Exercises.
    */
   data: Prisma.ExerciseCreateManyInput | Prisma.ExerciseCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1616,6 +1618,7 @@ export type ExerciseCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many Exercises.
    */
   data: Prisma.ExerciseCreateManyInput | Prisma.ExerciseCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

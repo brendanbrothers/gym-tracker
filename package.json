@@ -11,7 +11,7 @@
     "reset-dummy": "tsx prisma/reset-with-dummy-data.ts"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.1.0",
+    "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -21,13 +21,13 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "lucide-react": "^0.561.0",
     "next": "16.0.10",
     "next-auth": "^4.24.13",
+    "pg": "^8.16.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "recharts": "^3.5.1",
@@ -36,8 +36,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
+    "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

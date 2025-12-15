@@ -790,6 +790,7 @@ export type SetExerciseCreateOrConnectWithoutExerciseInput = {
 
 export type SetExerciseCreateManyExerciseInputEnvelope = {
   data: Prisma.SetExerciseCreateManyExerciseInput | Prisma.SetExerciseCreateManyExerciseInput[]
+  skipDuplicates?: boolean
 }
 
 export type SetExerciseUpsertWithWhereUniqueWithoutExerciseInput = {
@@ -873,6 +874,7 @@ export type SetExerciseCreateOrConnectWithoutWorkoutSetInput = {
 
 export type SetExerciseCreateManyWorkoutSetInputEnvelope = {
   data: Prisma.SetExerciseCreateManyWorkoutSetInput | Prisma.SetExerciseCreateManyWorkoutSetInput[]
+  skipDuplicates?: boolean
 }
 
 export type SetExerciseUpsertWithWhereUniqueWithoutWorkoutSetInput = {
@@ -1826,6 +1828,7 @@ export type SetExerciseCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many SetExercises.
    */
   data: Prisma.SetExerciseCreateManyInput | Prisma.SetExerciseCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1844,6 +1847,7 @@ export type SetExerciseCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many SetExercises.
    */
   data: Prisma.SetExerciseCreateManyInput | Prisma.SetExerciseCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

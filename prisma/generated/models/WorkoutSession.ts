@@ -528,6 +528,7 @@ export type WorkoutSessionCreateOrConnectWithoutClientInput = {
 
 export type WorkoutSessionCreateManyClientInputEnvelope = {
   data: Prisma.WorkoutSessionCreateManyClientInput | Prisma.WorkoutSessionCreateManyClientInput[]
+  skipDuplicates?: boolean
 }
 
 export type WorkoutSessionCreateWithoutTrainerInput = {
@@ -559,6 +560,7 @@ export type WorkoutSessionCreateOrConnectWithoutTrainerInput = {
 
 export type WorkoutSessionCreateManyTrainerInputEnvelope = {
   data: Prisma.WorkoutSessionCreateManyTrainerInput | Prisma.WorkoutSessionCreateManyTrainerInput[]
+  skipDuplicates?: boolean
 }
 
 export type WorkoutSessionUpsertWithWhereUniqueWithoutClientInput = {
@@ -1529,6 +1531,7 @@ export type WorkoutSessionCreateManyArgs<ExtArgs extends runtime.Types.Extension
    * The data used to create many WorkoutSessions.
    */
   data: Prisma.WorkoutSessionCreateManyInput | Prisma.WorkoutSessionCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1547,6 +1550,7 @@ export type WorkoutSessionCreateManyAndReturnArgs<ExtArgs extends runtime.Types.
    * The data used to create many WorkoutSessions.
    */
   data: Prisma.WorkoutSessionCreateManyInput | Prisma.WorkoutSessionCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */
