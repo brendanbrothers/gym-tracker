@@ -15,14 +15,18 @@ export async function createWorkout(formData: FormData) {
   const clientId = formData.get("clientId") as string
   const trainerId = formData.get("trainerId") as string | null
   const copyFromId = formData.get("copyFromId") as string | null
+  const dateStr = formData.get("date") as string | null
 
   if (!clientId) {
     return { error: "Client is required" }
   }
 
+  // Parse date or default to today
+  const date = dateStr ? new Date(dateStr + "T00:00:00") : new Date()
+
   const workout = await prisma.workoutSession.create({
     data: {
-      date: new Date(),
+      date,
       clientId,
       trainerId: trainerId || null,
       status: "IN_PROGRESS",

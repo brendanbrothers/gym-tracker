@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -135,6 +136,15 @@ export function NewWorkoutForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              defaultValue={new Date().toISOString().split("T")[0]}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>

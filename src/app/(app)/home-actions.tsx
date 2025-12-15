@@ -179,6 +179,15 @@ function NewWorkoutCard({ clients, trainers }: { clients: User[]; trainers: User
             </Select>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              defaultValue={new Date().toISOString().split("T")[0]}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>
             <Select name="copyFromId" disabled={!selectedClient || loadingWorkouts}>
               <SelectTrigger>
