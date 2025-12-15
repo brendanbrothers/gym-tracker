@@ -86,8 +86,10 @@ export async function getRecentWorkoutsForClient(clientId: string) {
     },
     include: {
       sets: {
+        orderBy: { order: "asc" },
         include: {
           exercises: {
+            orderBy: [{ order: "asc" }, { round: "asc" }],
             include: {
               exercise: true,
             },

@@ -18,7 +18,7 @@ export default async function WorkoutPage({
         orderBy: { order: "asc" },
         include: {
           exercises: {
-            orderBy: { order: "asc" },
+            orderBy: [{ order: "asc" }, { round: "asc" }],
             include: {
               exercise: true,
             },

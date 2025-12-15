@@ -76,6 +76,7 @@ type SetExercise = {
   actualWeight: number | null
   actualDuration: number | null
   completed: boolean
+  notes: string | null
   workoutSetId: string
   exercise: Exercise
 }
@@ -413,11 +414,13 @@ function RoundRow({
   const [actualWeight, setActualWeight] = useState(
     round.actualWeight?.toString() || ""
   )
+  const [notes, setNotes] = useState(round.notes || "")
 
   const handleUpdate = async (completed: boolean) => {
     const formData = new FormData()
     formData.set("actualReps", actualReps)
     formData.set("actualWeight", actualWeight)
+    formData.set("notes", notes)
     formData.set("completed", completed.toString())
     await updateExercise(round.id, workoutId, formData)
   }
@@ -445,6 +448,13 @@ function RoundRow({
             onChange={(e) => setActualWeight(e.target.value)}
             className="w-20"
           />
+          <Input
+            type="text"
+            placeholder="Note"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="flex-1 min-w-24"
+          />
           <Button
             variant={round.completed ? "default" : "outline"}
             size="sm"
@@ -458,6 +468,7 @@ function RoundRow({
         <span className="text-sm">
           {round.actualReps && `${round.actualReps} reps`}
           {round.actualWeight && ` @ ${round.actualWeight} lbs`}
+          {round.notes && ` - ${round.notes}`}
           {round.completed && " ✓"}
         </span>
       )}

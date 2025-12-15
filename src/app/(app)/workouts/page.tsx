@@ -23,8 +23,11 @@ export default async function WorkoutsPage() {
       client: true,
       trainer: true,
       sets: {
+        orderBy: { order: "asc" },
         include: {
-          exercises: true,
+          exercises: {
+            orderBy: [{ order: "asc" }, { round: "asc" }],
+          },
         },
       },
     },

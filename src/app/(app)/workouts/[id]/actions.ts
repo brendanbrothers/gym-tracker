@@ -75,6 +75,7 @@ export async function updateExercise(
   const actualReps = formData.get("actualReps") as string | null
   const actualWeight = formData.get("actualWeight") as string | null
   const actualDuration = formData.get("actualDuration") as string | null
+  const notes = formData.get("notes") as string | null
   const completed = formData.get("completed") === "true"
 
   await prisma.setExercise.update({
@@ -83,6 +84,7 @@ export async function updateExercise(
       actualReps: actualReps ? parseInt(actualReps) : null,
       actualWeight: actualWeight ? parseFloat(actualWeight) : null,
       actualDuration: actualDuration ? parseInt(actualDuration) : null,
+      notes: notes || null,
       completed,
     },
   })
