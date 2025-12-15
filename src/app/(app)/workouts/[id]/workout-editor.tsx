@@ -49,6 +49,7 @@ import {
   updateAllRoundsTargets,
   deleteWorkout,
   createExercise,
+  addRound,
 } from "./actions"
 
 import {
@@ -394,6 +395,19 @@ function ExerciseGroup({
             disabled={disabled}
           />
         ))}
+        {!disabled && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() =>
+              addRound(first.workoutSetId, first.exercise.id, first.order, workoutId)
+            }
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Round
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -462,6 +476,13 @@ function RoundRow({
           >
             <Check className="h-4 w-4" />
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => deleteExercise(round.id, workoutId)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </>
       )}
       {disabled && (
@@ -526,7 +547,7 @@ function AddExerciseDialog({
     return (
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full">
             <Plus className="mr-2 h-4 w-4" />
             Add Exercise
           </Button>

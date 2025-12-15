@@ -67,6 +67,44 @@ export async function addExerciseToSet(
     revalidatePath(`/workouts/${workoutId}`)
   }
 
+export async function addRound(
+  setId: string,
+  exerciseId: string,
+  order: number,
+  workoutId: string
+) {
+  // Find the last round for this exercise in this set
+  const lastRound = await prisma.setExercise.findFirst({
+    where: {
+      workoutSetId: setId,
+      exerciseId,
+      order,
+    },
+    orderBy: { round: "desc" },
+  })
+
+  if (!lastRound) {
+    return { error: "Exercise not found" }
+  }
+
+  const newRound = lastRound.round + 1
+
+  await prisma.setExercise.create({
+    data: {
+      workoutSetId: setId,
+      exerciseId,
+      order,
+      round: newRound,
+      modifier: lastRound.modifier,
+      targetReps: lastRound.targetReps,
+      targetWeight: lastRound.targetWeight,
+      targetDuration: lastRound.targetDuration,
+    },
+  })
+
+  revalidatePath(`/workouts/${workoutId}`)
+}
+
 export async function updateExercise(
   exerciseId: string,
   workoutId: string,
