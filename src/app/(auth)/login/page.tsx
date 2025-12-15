@@ -27,18 +27,26 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    })
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
 
-    setLoading(false)
-
-    if (result?.error) {
-      setError("Invalid email or password")
-    } else {
-      router.push("/")
+      if (result?.error) {
+        setError("Invalid email or password")
+        setLoading(false)
+      } else if (result?.ok) {
+        // Use window.location for a full page reload to ensure session cookie is picked up
+        window.location.href = "/"
+      } else {
+        setError("Something went wrong. Please try again.")
+        setLoading(false)
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.")
+      setLoading(false)
     }
   }
 
