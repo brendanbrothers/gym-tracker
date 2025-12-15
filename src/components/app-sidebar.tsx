@@ -1,6 +1,6 @@
 "use client"
 
-import { ClipboardList, Dumbbell, LogOut, TrendingUp, Users } from "lucide-react"
+import { ClipboardList, Dumbbell, Home, LogOut, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
@@ -20,6 +20,11 @@ import {
 import { Button } from "@/components/ui/button"
 
 const menuItems = [
+  {
+    title: "Home",
+    href: "/",
+    icon: Home,
+  },
   {
     title: "Workouts",
     href: "/workouts",
