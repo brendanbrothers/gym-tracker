@@ -338,6 +338,7 @@ function ExerciseGroup({
                         name="targetWeight"
                         type="number"
                         min={0}
+                        step="any"
                         defaultValue={first.targetWeight || ""}
                       />
                     </div>
@@ -457,6 +458,7 @@ function RoundRow({
           <Input
             type="number"
             min={0}
+            step="any"
             placeholder="Weight"
             value={actualWeight}
             onChange={(e) => setActualWeight(e.target.value)}
@@ -714,7 +716,7 @@ function AddExerciseDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetWeight">Weight (lbs)</Label>
-                  <Input id="targetWeight" name="targetWeight" type="number" min={0} />
+                  <Input id="targetWeight" name="targetWeight" type="number" min={0} step="any" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetDuration">Duration (s)</Label>
