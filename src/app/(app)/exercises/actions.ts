@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { getServerSession } from "next-auth"
 import { prisma } from "@/lib/db"
+import { authOptions } from "@/lib/auth"
 
 export async function getExercises(params: {
   search?: string
@@ -21,6 +23,11 @@ export async function getExercises(params: {
         primaryMuscle && primaryMuscle !== "all" ? { primaryMuscle } : {},
         equipment && equipment !== "all" ? { equipment } : {},
       ],
+    },
+    include: {
+      createdBy: {
+        select: { id: true, name: true },
+      },
     },
     orderBy: { name: "asc" },
     take: 50,
@@ -59,6 +66,7 @@ export async function getFilterOptions() {
 }
 
 export async function createExercise(formData: FormData) {
+  const session = await getServerSession(authOptions)
   const name = formData.get("name") as string
   const category = formData.get("category") as string | null
   const primaryMuscle = formData.get("primaryMuscle") as string | null
@@ -84,6 +92,53 @@ export async function createExercise(formData: FormData) {
       primaryMuscle: primaryMuscle || null,
       equipment: equipment || null,
       source: "CUSTOM",
+      createdById: session?.user?.id || null,
+    },
+    include: {
+      createdBy: {
+        select: { id: true, name: true },
+      },
+    },
+  })
+
+  revalidatePath("/exercises")
+  return { success: true, exercise }
+}
+
+export async function updateExercise(exerciseId: string, formData: FormData) {
+  const name = formData.get("name") as string
+  const category = formData.get("category") as string | null
+  const primaryMuscle = formData.get("primaryMuscle") as string | null
+  const equipment = formData.get("equipment") as string | null
+
+  if (!name) {
+    return { error: "Name is required" }
+  }
+
+  // Check for duplicate name (excluding current exercise)
+  const existing = await prisma.exercise.findFirst({
+    where: {
+      name: { equals: name },
+      id: { not: exerciseId },
+    },
+  })
+
+  if (existing) {
+    return { error: "An exercise with this name already exists" }
+  }
+
+  const exercise = await prisma.exercise.update({
+    where: { id: exerciseId },
+    data: {
+      name,
+      category: category && category !== "none" ? category : null,
+      primaryMuscle: primaryMuscle && primaryMuscle !== "none" ? primaryMuscle : null,
+      equipment: equipment && equipment !== "none" ? equipment : null,
+    },
+    include: {
+      createdBy: {
+        select: { id: true, name: true },
+      },
     },
   })
 
