@@ -212,11 +212,11 @@ export async function updateExerciseTargets(
     const category = formData.get("category") as string | null
     const primaryMuscle = formData.get("primaryMuscle") as string | null
     const equipment = formData.get("equipment") as string | null
-  
+
     if (!name) {
       return { error: "Name is required" }
     }
-  
+
     const exercise = await prisma.exercise.create({
       data: {
         name,
@@ -226,6 +226,24 @@ export async function updateExerciseTargets(
         source: "CUSTOM",
       },
     })
-  
+
     return { success: true, exercise }
+  }
+
+  export async function updateWorkoutDetails(
+    workoutId: string,
+    formData: FormData
+  ) {
+    const date = formData.get("date") as string
+    const trainerId = formData.get("trainerId") as string | null
+
+    await prisma.workoutSession.update({
+      where: { id: workoutId },
+      data: {
+        date: new Date(date + "T00:00:00"),
+        trainerId: trainerId && trainerId !== "none" ? trainerId : null,
+      },
+    })
+
+    revalidatePath(`/workouts/${workoutId}`)
   }

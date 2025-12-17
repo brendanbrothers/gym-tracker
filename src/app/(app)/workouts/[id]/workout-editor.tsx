@@ -50,6 +50,7 @@ import {
   deleteWorkout,
   createExercise,
   addRound,
+  updateWorkoutDetails,
 } from "./actions"
 
 import {
@@ -63,6 +64,11 @@ type Exercise = {
   name: string
   category: string | null
   primaryMuscle: string | null
+}
+
+type Trainer = {
+  id: string
+  name: string
 }
 
 type SetExercise = {
@@ -93,19 +99,28 @@ type Workout = {
   date: Date
   status: string
   client: { name: string }
-  trainer: { name: string } | null
+  trainer: { id: string; name: string } | null
+  trainerId: string | null
   sets: WorkoutSet[]
 }
 
 export function WorkoutEditor({
   workout,
   exercises,
+  trainers,
 }: {
   workout: Workout
   exercises: Exercise[]
+  trainers: Trainer[]
 }) {
   const router = useRouter()
   const isCompleted = workout.status === "COMPLETED"
+  const [editOpen, setEditOpen] = useState(false)
+
+  async function handleEditSubmit(formData: FormData) {
+    await updateWorkoutDetails(workout.id, formData)
+    setEditOpen(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -120,6 +135,50 @@ export function WorkoutEditor({
           </p>
         </div>
         <div className="flex gap-2">
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Workout Details</DialogTitle>
+              </DialogHeader>
+              <form action={handleEditSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    name="date"
+                    type="date"
+                    defaultValue={new Date(workout.date).toISOString().split("T")[0]}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="trainerId">Trainer</Label>
+                  <Select name="trainerId" defaultValue={workout.trainerId || "none"}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select trainer (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No trainer</SelectItem>
+                      {trainers.map((trainer) => (
+                        <SelectItem key={trainer.id} value={trainer.id}>
+                          {trainer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full">
+                  Save Changes
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline">

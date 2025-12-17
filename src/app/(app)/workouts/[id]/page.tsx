@@ -8,7 +8,7 @@ export default async function WorkoutPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  
+
   const workout = await prisma.workoutSession.findUnique({
     where: { id },
     include: {
@@ -38,9 +38,14 @@ export default async function WorkoutPage({
     take: 100,
   })
 
+  const trainers = await prisma.user.findMany({
+    where: { role: { in: ["TRAINER", "ADMIN"] } },
+    orderBy: { name: "asc" },
+  })
+
   return (
     <div className="p-6">
-      <WorkoutEditor workout={workout} exercises={exercises} />
+      <WorkoutEditor workout={workout} exercises={exercises} trainers={trainers} />
     </div>
   )
 }
