@@ -23,7 +23,11 @@ import {
 
 import { createUser } from "./actions"
 
-export function UserForm() {
+type UserFormProps = {
+  defaultRole?: "CLIENT" | "TRAINER" | "ADMIN"
+}
+
+export function UserForm({ defaultRole }: UserFormProps = {}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
@@ -69,7 +73,7 @@ export function UserForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select name="role" required>
+            <Select name="role" required defaultValue={defaultRole}>
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>

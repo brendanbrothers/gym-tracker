@@ -70,7 +70,7 @@ export function ProgressChart({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+      <div className={`grid grid-cols-1 ${clients.length > 0 ? "md:grid-cols-2" : ""} gap-4 max-w-xl`}>
         <div className="space-y-2">
           <Label>Exercise</Label>
           <Select value={selectedExercise} onValueChange={setSelectedExercise}>
@@ -86,22 +86,24 @@ export function ProgressChart({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label>Client</Label>
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger>
-              <SelectValue placeholder="All clients" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {clients.length > 0 && (
+          <div className="space-y-2">
+            <Label>Client</Label>
+            <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <SelectTrigger>
+                <SelectValue placeholder="All clients" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clients</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {!selectedExercise && (

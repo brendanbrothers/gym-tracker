@@ -67,6 +67,12 @@ export async function getFilterOptions() {
 
 export async function createExercise(formData: FormData) {
   const session = await getServerSession(authOptions)
+
+  // Only trainers and admins can create exercises
+  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+    return { error: "Unauthorized: Only trainers can create exercises" }
+  }
+
   const name = formData.get("name") as string
   const category = formData.get("category") as string | null
   const primaryMuscle = formData.get("primaryMuscle") as string | null
@@ -106,6 +112,13 @@ export async function createExercise(formData: FormData) {
 }
 
 export async function updateExercise(exerciseId: string, formData: FormData) {
+  const session = await getServerSession(authOptions)
+
+  // Only trainers and admins can update exercises
+  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+    return { error: "Unauthorized: Only trainers can update exercises" }
+  }
+
   const name = formData.get("name") as string
   const category = formData.get("category") as string | null
   const primaryMuscle = formData.get("primaryMuscle") as string | null
@@ -147,6 +160,13 @@ export async function updateExercise(exerciseId: string, formData: FormData) {
 }
 
 export async function deleteExercise(exerciseId: string) {
+  const session = await getServerSession(authOptions)
+
+  // Only trainers and admins can delete exercises
+  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+    return { error: "Unauthorized: Only trainers can delete exercises" }
+  }
+
   // Check if exercise is used in any workout
   const usageCount = await prisma.setExercise.count({
     where: { exerciseId },

@@ -1,6 +1,6 @@
 "use client"
 
-import { ClipboardList, Dumbbell, Home, LogOut, TrendingUp, Users } from "lucide-react"
+import { ClipboardList, Dumbbell, Home, LogOut, TrendingUp, Users, UserCheck } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
@@ -19,37 +19,32 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 
-const menuItems = [
-  {
-    title: "Home",
-    href: "/",
-    icon: Home,
-  },
-  {
-    title: "Workouts",
-    href: "/workouts",
-    icon: ClipboardList,
-  },
-  {
-    title: "Progress",
-    href: "/progress",
-    icon: TrendingUp,
-  },
-  {
-    title: "Users",
-    href: "/users",
-    icon: Users,
-  },
-  {
-    title: "Exercises",
-    href: "/exercises",
-    icon: Dumbbell,
-  },
-]
+function getMenuItems(role: string | undefined) {
+  const isTrainer = role === "TRAINER" || role === "ADMIN"
+
+  if (isTrainer) {
+    return [
+      { title: "Home", href: "/", icon: Home },
+      { title: "Workouts", href: "/workouts", icon: ClipboardList },
+      { title: "Clients", href: "/clients", icon: Users },
+      { title: "Trainers", href: "/trainers", icon: UserCheck },
+      { title: "Progress", href: "/progress", icon: TrendingUp },
+      { title: "Exercises", href: "/exercises", icon: Dumbbell },
+    ]
+  }
+
+  return [
+    { title: "Home", href: "/", icon: Home },
+    { title: "My Workouts", href: "/workouts", icon: ClipboardList },
+    { title: "Progress", href: "/progress", icon: TrendingUp },
+    { title: "Exercises", href: "/exercises", icon: Dumbbell },
+  ]
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const menuItems = getMenuItems(session?.user?.role)
 
   return (
     <Sidebar className="hidden md:flex">

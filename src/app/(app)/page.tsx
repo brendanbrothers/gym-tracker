@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import Link from "next/link"
-import { Dumbbell, Users, ClipboardList } from "lucide-react"
+import { ClipboardList } from "lucide-react"
 
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
@@ -20,10 +20,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { HomeActions } from "./home-actions"
+import { ClientHome } from "./client-home"
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
   const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+
+  // Show client home for non-trainers
+  if (!isTrainer && session?.user) {
+    return <ClientHome userId={session.user.id} userName={session.user.name || "User"} />
+  }
 
   // Get today's date range
   const today = new Date()

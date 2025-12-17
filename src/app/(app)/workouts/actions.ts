@@ -12,6 +12,11 @@ export async function createWorkout(formData: FormData) {
     return { error: "Unauthorized" }
   }
 
+  // Only trainers and admins can create workouts
+  if (session.user.role !== "TRAINER" && session.user.role !== "ADMIN") {
+    return { error: "Unauthorized: Only trainers can create workouts" }
+  }
+
   const clientId = formData.get("clientId") as string
   const trainerId = formData.get("trainerId") as string | null
   const copyFromId = formData.get("copyFromId") as string | null

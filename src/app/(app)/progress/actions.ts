@@ -1,14 +1,22 @@
 "use server"
 
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
 export async function getProgressData(exerciseId: string, clientId?: string) {
+  const session = await getServerSession(authOptions)
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+
+  // For non-trainers, always filter by their own clientId
+  const effectiveClientId = isTrainer ? clientId : session?.user.id
+
   const setExercises = await prisma.setExercise.findMany({
     where: {
       exerciseId,
       completed: true,
       workoutSet: {
-        workoutSession: clientId ? { clientId } : {},
+        workoutSession: effectiveClientId ? { clientId: effectiveClientId } : {},
       },
     },
     include: {
@@ -77,11 +85,22 @@ export async function getProgressData(exerciseId: string, clientId?: string) {
 }
 
 export async function getExercisesWithHistory() {
+  const session = await getServerSession(authOptions)
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+
   const exercises = await prisma.exercise.findMany({
     where: {
       setExercises: {
         some: {
           completed: true,
+          // For non-trainers, only show exercises they have completed
+          ...(isTrainer ? {} : {
+            workoutSet: {
+              workoutSession: {
+                clientId: session?.user.id,
+              },
+            },
+          }),
         },
       },
     },

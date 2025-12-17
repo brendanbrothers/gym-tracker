@@ -3,38 +3,35 @@
 import { ClipboardList, Dumbbell, Home, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
-const menuItems = [
-  {
-    title: "Home",
-    href: "/",
-    icon: Home,
-  },
-  {
-    title: "Workouts",
-    href: "/workouts",
-    icon: ClipboardList,
-  },
-  {
-    title: "Progress",
-    href: "/progress",
-    icon: TrendingUp,
-  },
-  {
-    title: "Users",
-    href: "/users",
-    icon: Users,
-  },
-  {
-    title: "Exercises",
-    href: "/exercises",
-    icon: Dumbbell,
-  },
-]
+function getMenuItems(role: string | undefined) {
+  const isTrainer = role === "TRAINER" || role === "ADMIN"
+
+  if (isTrainer) {
+    // Trainer mobile nav - limit to 5 most important items
+    return [
+      { title: "Home", href: "/", icon: Home },
+      { title: "Workouts", href: "/workouts", icon: ClipboardList },
+      { title: "Clients", href: "/clients", icon: Users },
+      { title: "Progress", href: "/progress", icon: TrendingUp },
+      { title: "Exercises", href: "/exercises", icon: Dumbbell },
+    ]
+  }
+
+  return [
+    { title: "Home", href: "/", icon: Home },
+    { title: "Workouts", href: "/workouts", icon: ClipboardList },
+    { title: "Progress", href: "/progress", icon: TrendingUp },
+    { title: "Exercises", href: "/exercises", icon: Dumbbell },
+  ]
+}
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const menuItems = getMenuItems(session?.user?.role)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">

@@ -65,9 +65,11 @@ type FilterOptions = {
 export function ExerciseFilters({
   initialExercises,
   filterOptions,
+  isTrainer = false,
 }: {
   initialExercises: Exercise[]
   filterOptions: FilterOptions
+  isTrainer?: boolean
 }) {
   const [exercises, setExercises] = useState(initialExercises)
   const [search, setSearch] = useState("")
@@ -163,21 +165,24 @@ export function ExerciseFilters({
             Clear Filters
           </Button>
         </div>
-        <ExerciseForm 
-  onSubmit={createExercise} 
-  onSuccess={() => {
-    // Re-fetch the exercises
-    startTransition(async () => {
-      const results = await getExercises({
-        search: search || undefined,
-        category: category || undefined,
-        primaryMuscle: muscle || undefined,
-        equipment: equipment || undefined,
-      })
-      setExercises(results)
-    })
-  }}
-/>      </div>
+        {isTrainer && (
+          <ExerciseForm
+            onSubmit={createExercise}
+            onSuccess={() => {
+              // Re-fetch the exercises
+              startTransition(async () => {
+                const results = await getExercises({
+                  search: search || undefined,
+                  category: category || undefined,
+                  primaryMuscle: muscle || undefined,
+                  equipment: equipment || undefined,
+                })
+                setExercises(results)
+              })
+            }}
+          />
+        )}
+      </div>
       <p className="text-sm text-muted-foreground">
         Showing {exercises.length} exercises {isPending && "(loading...)"}
       </p>
@@ -204,6 +209,7 @@ export function ExerciseFilters({
               onUpdate={(updated) => {
                 setExercises(exercises.map((e) => (e.id === updated.id ? updated : e)))
               }}
+              isTrainer={isTrainer}
             />
           ))}
         </TableBody>
@@ -216,10 +222,12 @@ function ExerciseRow({
   exercise,
   onDelete,
   onUpdate,
+  isTrainer,
 }: {
   exercise: Exercise
   onDelete: (id: string) => void
   onUpdate: (exercise: Exercise) => void
+  isTrainer: boolean
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [error, setError] = useState("")
@@ -247,104 +255,106 @@ function ExerciseRow({
       <TableCell>{exercise.equipment || "-"}</TableCell>
       <TableCell>{exercise.createdBy?.name || "-"}</TableCell>
       <TableCell>
-        <div className="flex gap-1">
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Exercise</DialogTitle>
-              </DialogHeader>
-              <form action={handleEdit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Exercise Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    required
-                    defaultValue={exercise.name}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue={exercise.category || "none"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {EXERCISE_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="primaryMuscle">Primary Muscle</Label>
-                  <Select name="primaryMuscle" defaultValue={exercise.primaryMuscle || "none"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select muscle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {PRIMARY_MUSCLES.map((muscle) => (
-                        <SelectItem key={muscle} value={muscle}>
-                          {muscle}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="equipment">Equipment</Label>
-                  <Select name="equipment" defaultValue={exercise.equipment || "none"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select equipment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {EQUIPMENT.map((equip) => (
-                        <SelectItem key={equip} value={equip}>
-                          {equip}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Saving..." : "Save Changes"}
+        {isTrainer && (
+          <div className="flex gap-1">
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Pencil className="h-4 w-4" />
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete {exercise.name}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this exercise. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(exercise.id)}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Exercise</DialogTitle>
+                </DialogHeader>
+                <form action={handleEdit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Exercise Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      required
+                      defaultValue={exercise.name}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select name="category" defaultValue={exercise.category || "none"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {EXERCISE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryMuscle">Primary Muscle</Label>
+                    <Select name="primaryMuscle" defaultValue={exercise.primaryMuscle || "none"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select muscle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {PRIMARY_MUSCLES.map((muscle) => (
+                          <SelectItem key={muscle} value={muscle}>
+                            {muscle}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="equipment">Equipment</Label>
+                    <Select name="equipment" defaultValue={exercise.equipment || "none"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select equipment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {EQUIPMENT.map((equip) => (
+                          <SelectItem key={equip} value={equip}>
+                            {equip}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {exercise.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this exercise. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(exercise.id)}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </TableCell>
     </TableRow>
   )

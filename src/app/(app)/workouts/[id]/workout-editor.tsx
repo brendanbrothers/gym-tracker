@@ -108,14 +108,22 @@ export function WorkoutEditor({
   workout,
   exercises,
   trainers,
+  isTrainer = false,
+  isOwner = false,
 }: {
   workout: Workout
   exercises: Exercise[]
   trainers: Trainer[]
+  isTrainer?: boolean
+  isOwner?: boolean
 }) {
   const router = useRouter()
   const isCompleted = workout.status === "COMPLETED"
   const [editOpen, setEditOpen] = useState(false)
+
+  // Permission flags
+  const canEdit = isTrainer // Can modify workout structure
+  const canLog = isTrainer || isOwner // Can log results
 
   async function handleEditSubmit(formData: FormData) {
     await updateWorkoutDetails(workout.id, formData)
@@ -135,78 +143,82 @@ export function WorkoutEditor({
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Workout Details</DialogTitle>
-              </DialogHeader>
-              <form action={handleEditSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    name="date"
-                    type="date"
-                    defaultValue={new Date(workout.date).toISOString().split("T")[0]}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="trainerId">Trainer</Label>
-                  <Select name="trainerId" defaultValue={workout.trainerId || "none"}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select trainer (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No trainer</SelectItem>
-                      {trainers.map((trainer) => (
-                        <SelectItem key={trainer.id} value={trainer.id}>
-                          {trainer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full">
-                  Save Changes
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this workout?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this workout and all its sets and exercises. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-  onClick={async () => {
-    await deleteWorkout(workout.id)
-    router.push("/workouts")
-  }}
->
-  Delete
-</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          {!isCompleted && (
+          {canEdit && (
+            <>
+              <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Workout Details</DialogTitle>
+                  </DialogHeader>
+                  <form action={handleEditSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Input
+                        id="date"
+                        name="date"
+                        type="date"
+                        defaultValue={new Date(workout.date).toISOString().split("T")[0]}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="trainerId">Trainer</Label>
+                      <Select name="trainerId" defaultValue={workout.trainerId || "none"}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select trainer (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No trainer</SelectItem>
+                          {trainers.map((trainer) => (
+                            <SelectItem key={trainer.id} value={trainer.id}>
+                              {trainer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Save Changes
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this workout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete this workout and all its sets and exercises. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        await deleteWorkout(workout.id)
+                        router.push("/workouts")
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+          {!isCompleted && canLog && (
             <Button
               variant="default"
               onClick={async () => {
@@ -233,10 +245,12 @@ export function WorkoutEditor({
           workoutId={workout.id}
           exercises={exercises}
           disabled={isCompleted}
+          canEdit={canEdit}
+          canLog={canLog}
         />
       ))}
 
-      {!isCompleted && (
+      {!isCompleted && canEdit && (
         <Button
           variant="outline"
           onClick={() => addSet(workout.id)}
@@ -255,11 +269,15 @@ function SetCard({
   workoutId,
   exercises,
   disabled,
+  canEdit,
+  canLog,
 }: {
   set: WorkoutSet
   workoutId: string
   exercises: Exercise[]
   disabled: boolean
+  canEdit: boolean
+  canLog: boolean
 }) {
   const groupedExercises = set.exercises.reduce((acc, ex) => {
     const key = ex.order
@@ -274,7 +292,7 @@ function SetCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg">Set {set.order}</CardTitle>
-        {!disabled && (
+        {!disabled && canEdit && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -305,9 +323,11 @@ function SetCard({
             rounds={rounds}
             workoutId={workoutId}
             disabled={disabled}
+            canEdit={canEdit}
+            canLog={canLog}
           />
         ))}
-        {!disabled && (
+        {!disabled && canEdit && (
           <AddExerciseDialog
             setId={set.id}
             workoutId={workoutId}
@@ -323,10 +343,14 @@ function ExerciseGroup({
   rounds,
   workoutId,
   disabled,
+  canEdit,
+  canLog,
 }: {
   rounds: SetExercise[]
   workoutId: string
   disabled: boolean
+  canEdit: boolean
+  canLog: boolean
 }) {
   const first = rounds[0]
   const [editOpen, setEditOpen] = useState(false)
@@ -357,7 +381,7 @@ function ExerciseGroup({
             {rounds.length > 1 && ` × ${rounds.length} rounds`}
           </p>
         </div>
-        {!disabled && (
+        {!disabled && canEdit && (
           <div className="flex gap-1">
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
@@ -453,9 +477,11 @@ function ExerciseGroup({
             round={round}
             workoutId={workoutId}
             disabled={disabled}
+            canEdit={canEdit}
+            canLog={canLog}
           />
         ))}
-        {!disabled && (
+        {!disabled && canEdit && (
           <Button
             variant="outline"
             size="sm"
@@ -477,10 +503,14 @@ function RoundRow({
   round,
   workoutId,
   disabled,
+  canEdit,
+  canLog,
 }: {
   round: SetExercise
   workoutId: string
   disabled: boolean
+  canEdit: boolean
+  canLog: boolean
 }) {
   const [actualReps, setActualReps] = useState(
     round.actualReps?.toString() || ""
@@ -504,7 +534,7 @@ function RoundRow({
       <span className="text-sm text-muted-foreground w-16">
         Round {round.round}
       </span>
-      {!disabled && (
+      {!disabled && canLog && (
         <>
           <Input
             type="number"
@@ -537,16 +567,18 @@ function RoundRow({
           >
             <Check className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => deleteExercise(round.id, workoutId)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteExercise(round.id, workoutId)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </>
       )}
-      {disabled && (
+      {(disabled || !canLog) && (
         <span className="text-sm">
           {round.actualReps && `${round.actualReps} reps`}
           {round.actualWeight && ` @ ${round.actualWeight} lbs`}

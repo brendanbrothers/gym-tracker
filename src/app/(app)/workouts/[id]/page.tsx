@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { WorkoutEditor } from "./workout-editor"
 
@@ -8,6 +10,7 @@ export default async function WorkoutPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const session = await getServerSession(authOptions)
 
   const workout = await prisma.workoutSession.findUnique({
     where: { id },
@@ -32,6 +35,14 @@ export default async function WorkoutPage({
     notFound()
   }
 
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isOwner = workout.clientId === session?.user.id
+
+  // Access control: clients can only see their own workouts
+  if (!isTrainer && !isOwner) {
+    redirect("/workouts")
+  }
+
   const exercises = await prisma.exercise.findMany({
     where: { isActive: true },
     orderBy: { name: "asc" },
@@ -45,7 +56,13 @@ export default async function WorkoutPage({
 
   return (
     <div className="p-6">
-      <WorkoutEditor workout={workout} exercises={exercises} trainers={trainers} />
+      <WorkoutEditor
+        workout={workout}
+        exercises={exercises}
+        trainers={trainers}
+        isTrainer={isTrainer}
+        isOwner={isOwner}
+      />
     </div>
   )
 }
