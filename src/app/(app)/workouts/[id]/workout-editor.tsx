@@ -513,11 +513,12 @@ function RoundRow({
   canEdit: boolean
   canLog: boolean
 }) {
+  // Default to target values if no actual values have been entered yet
   const [actualReps, setActualReps] = useState(
-    round.actualReps?.toString() || ""
+    round.actualReps?.toString() || round.targetReps?.toString() || ""
   )
   const [actualWeight, setActualWeight] = useState(
-    round.actualWeight?.toString() || ""
+    round.actualWeight?.toString() || round.targetWeight?.toString() || ""
   )
   const [notes, setNotes] = useState(round.notes || "")
 
