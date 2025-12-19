@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -52,6 +53,8 @@ export function ProgressChart({
 }) {
   const [selectedExercise, setSelectedExercise] = useState<string>("")
   const [selectedClient, setSelectedClient] = useState<string>("all")
+  const [startDate, setStartDate] = useState<string>("")
+  const [endDate, setEndDate] = useState<string>("")
   const [data, setData] = useState<ProgressData[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -61,31 +64,18 @@ export function ProgressChart({
     setLoading(true)
     getProgressData(
       selectedExercise,
-      selectedClient === "all" ? undefined : selectedClient
+      selectedClient === "all" ? undefined : selectedClient,
+      startDate || undefined,
+      endDate || undefined
     ).then((result) => {
       setData(result)
       setLoading(false)
     })
-  }, [selectedExercise, selectedClient])
+  }, [selectedExercise, selectedClient, startDate, endDate])
 
   return (
     <div className="space-y-6">
-      <div className={`grid grid-cols-1 ${clients.length > 0 ? "md:grid-cols-2" : ""} gap-4 max-w-xl`}>
-        <div className="space-y-2">
-          <Label>Exercise</Label>
-          <Select value={selectedExercise} onValueChange={setSelectedExercise}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select exercise" />
-            </SelectTrigger>
-            <SelectContent>
-              {exercises.map((exercise) => (
-                <SelectItem key={exercise.id} value={exercise.id}>
-                  {exercise.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {clients.length > 0 && (
           <div className="space-y-2">
             <Label>Client</Label>
@@ -104,6 +94,39 @@ export function ProgressChart({
             </Select>
           </div>
         )}
+        <div className="space-y-2">
+          <Label>Exercise</Label>
+          <Select value={selectedExercise} onValueChange={setSelectedExercise}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select exercise" />
+            </SelectTrigger>
+            <SelectContent>
+              {exercises.map((exercise) => (
+                <SelectItem key={exercise.id} value={exercise.id}>
+                  {exercise.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Start Date</Label>
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            placeholder="All time"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>End Date</Label>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            placeholder="Today"
+          />
+        </div>
       </div>
 
       {!selectedExercise && (

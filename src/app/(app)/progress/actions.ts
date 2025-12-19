@@ -4,19 +4,39 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-export async function getProgressData(exerciseId: string, clientId?: string) {
+export async function getProgressData(
+  exerciseId: string,
+  clientId?: string,
+  startDate?: string,
+  endDate?: string
+) {
   const session = await getServerSession(authOptions)
   const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
 
   // For non-trainers, always filter by their own clientId
   const effectiveClientId = isTrainer ? clientId : session?.user.id
 
+  // Build date filter
+  const dateFilter: { gte?: Date; lte?: Date } = {}
+  if (startDate) {
+    dateFilter.gte = new Date(startDate)
+  }
+  if (endDate) {
+    dateFilter.lte = new Date(endDate + "T23:59:59")
+  } else if (startDate) {
+    // If only start date specified, go to today
+    dateFilter.lte = new Date()
+  }
+
   const setExercises = await prisma.setExercise.findMany({
     where: {
       exerciseId,
       completed: true,
       workoutSet: {
-        workoutSession: effectiveClientId ? { clientId: effectiveClientId } : {},
+        workoutSession: {
+          ...(effectiveClientId ? { clientId: effectiveClientId } : {}),
+          ...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {}),
+        },
       },
     },
     include: {
