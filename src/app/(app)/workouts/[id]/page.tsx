@@ -35,7 +35,7 @@ export default async function WorkoutPage({
     notFound()
   }
 
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
   const isOwner = workout.clientId === session?.user.id
 
   // Access control: clients can only see their own workouts

@@ -51,6 +51,7 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  Gym: 'Gym',
   User: 'User',
   Exercise: 'Exercise',
   WorkoutSession: 'WorkoutSession',
@@ -74,6 +75,19 @@ export const TransactionIsolationLevel = {
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const GymScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  logo: 'logo',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GymScalarFieldEnum = (typeof GymScalarFieldEnum)[keyof typeof GymScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -81,7 +95,8 @@ export const UserScalarFieldEnum = {
   password: 'password',
   role: 'role',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  gymId: 'gymId'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -98,9 +113,11 @@ export const ExerciseScalarFieldEnum = {
   source: 'source',
   sourceId: 'sourceId',
   isActive: 'isActive',
+  isGlobal: 'isGlobal',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  createdById: 'createdById'
+  createdById: 'createdById',
+  gymId: 'gymId'
 } as const
 
 export type ExerciseScalarFieldEnum = (typeof ExerciseScalarFieldEnum)[keyof typeof ExerciseScalarFieldEnum]
@@ -114,7 +131,8 @@ export const WorkoutSessionScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   clientId: 'clientId',
-  trainerId: 'trainerId'
+  trainerId: 'trainerId',
+  gymId: 'gymId'
 } as const
 
 export type WorkoutSessionScalarFieldEnum = (typeof WorkoutSessionScalarFieldEnum)[keyof typeof WorkoutSessionScalarFieldEnum]

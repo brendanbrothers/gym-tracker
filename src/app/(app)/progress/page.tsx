@@ -5,7 +5,7 @@ import { getExercisesWithHistory, getClients } from "./actions"
 
 export default async function ProgressPage() {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
 
   const exercises = await getExercisesWithHistory()
   const clients = isTrainer ? await getClients() : []

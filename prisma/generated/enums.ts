@@ -12,6 +12,7 @@
 export const Role = {
   CLIENT: 'CLIENT',
   TRAINER: 'TRAINER',
+  GYM_ADMIN: 'GYM_ADMIN',
   ADMIN: 'ADMIN'
 } as const
 

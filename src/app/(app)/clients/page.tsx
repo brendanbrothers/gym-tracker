@@ -14,7 +14,7 @@ import { UserForm } from "../users/user-form"
 
 export default async function ClientsPage() {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
 
   if (!isTrainer) {
     redirect("/")

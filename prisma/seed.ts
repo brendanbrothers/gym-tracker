@@ -26,7 +26,18 @@ interface ExerciseData {
 }
 
 async function main() {
-  console.log('Seeding exercises...')
+  console.log('Seeding exercises and gym...')
+
+  // Create default gym
+  const gym = await prisma.gym.upsert({
+    where: { slug: 'default' },
+    update: {},
+    create: {
+      name: 'Default Gym',
+      slug: 'default',
+    },
+  })
+  console.log(`Created/found gym: ${gym.name}`)
 
   const exerciseData = exercises as ExerciseData[]
 
@@ -41,7 +52,7 @@ async function main() {
           sourceId: exercise.id,
         },
       },
-      update: {},
+      update: { isGlobal: true },
       create: {
         name: exercise.name,
         instructions: exercise.instructions?.join('\n\n') || null,
@@ -51,40 +62,42 @@ async function main() {
         images: JSON.stringify(images),
         source: 'IMPORTED',
         sourceId: exercise.id,
+        isGlobal: true,
       },
     })
   }
 
   console.log(`Seeded ${exerciseData.length} exercises`)
 
-// Create a trainer user
-const trainerPassword = await bcrypt.hash('trainer123', 10)
-await prisma.user.upsert({
-  where: { email: 'trainer@example.com' },
-  update: {},
-  create: {
-    email: 'trainer@example.com',
-    name: 'Test Trainer',
-    password: trainerPassword,
-    role: 'TRAINER',
-  },
-})
+  // Create a trainer user
+  const trainerPassword = await bcrypt.hash('trainer123', 10)
+  await prisma.user.upsert({
+    where: { email: 'trainer@example.com' },
+    update: {},
+    create: {
+      email: 'trainer@example.com',
+      name: 'Test Trainer',
+      password: trainerPassword,
+      role: 'TRAINER',
+      gymId: gym.id,
+    },
+  })
 
-// Create a client user
-const clientPassword = await bcrypt.hash('client123', 10)
-await prisma.user.upsert({
-  where: { email: 'client@example.com' },
-  update: {},
-  create: {
-    email: 'client@example.com',
-    name: 'Test Client',
-    password: clientPassword,
-    role: 'CLIENT',
-  },
-})
+  // Create a client user
+  const clientPassword = await bcrypt.hash('client123', 10)
+  await prisma.user.upsert({
+    where: { email: 'client@example.com' },
+    update: {},
+    create: {
+      email: 'client@example.com',
+      name: 'Test Client',
+      password: clientPassword,
+      role: 'CLIENT',
+      gymId: gym.id,
+    },
+  })
 
-console.log('Created test users')
-
+  console.log('Created test users')
 }
 
 main()

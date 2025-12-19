@@ -384,6 +384,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
+  Gym: 'Gym',
   User: 'User',
   Exercise: 'Exercise',
   WorkoutSession: 'WorkoutSession',
@@ -404,10 +405,84 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "exercise" | "workoutSession" | "workoutSet" | "setExercise"
+    modelProps: "gym" | "user" | "exercise" | "workoutSession" | "workoutSet" | "setExercise"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
+    Gym: {
+      payload: Prisma.$GymPayload<ExtArgs>
+      fields: Prisma.GymFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GymFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GymFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        findFirst: {
+          args: Prisma.GymFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GymFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        findMany: {
+          args: Prisma.GymFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>[]
+        }
+        create: {
+          args: Prisma.GymCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        createMany: {
+          args: Prisma.GymCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GymCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>[]
+        }
+        delete: {
+          args: Prisma.GymDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        update: {
+          args: Prisma.GymUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        deleteMany: {
+          args: Prisma.GymDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GymUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GymUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>[]
+        }
+        upsert: {
+          args: Prisma.GymUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GymPayload>
+        }
+        aggregate: {
+          args: Prisma.GymAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGym>
+        }
+        groupBy: {
+          args: Prisma.GymGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GymGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GymCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GymCountAggregateOutputType> | number
+        }
+      }
+    }
     User: {
       payload: Prisma.$UserPayload<ExtArgs>
       fields: Prisma.UserFieldRefs
@@ -817,6 +892,19 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const GymScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  logo: 'logo',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GymScalarFieldEnum = (typeof GymScalarFieldEnum)[keyof typeof GymScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -824,7 +912,8 @@ export const UserScalarFieldEnum = {
   password: 'password',
   role: 'role',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  gymId: 'gymId'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -841,9 +930,11 @@ export const ExerciseScalarFieldEnum = {
   source: 'source',
   sourceId: 'sourceId',
   isActive: 'isActive',
+  isGlobal: 'isGlobal',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  createdById: 'createdById'
+  createdById: 'createdById',
+  gymId: 'gymId'
 } as const
 
 export type ExerciseScalarFieldEnum = (typeof ExerciseScalarFieldEnum)[keyof typeof ExerciseScalarFieldEnum]
@@ -857,7 +948,8 @@ export const WorkoutSessionScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   clientId: 'clientId',
-  trainerId: 'trainerId'
+  trainerId: 'trainerId',
+  gymId: 'gymId'
 } as const
 
 export type WorkoutSessionScalarFieldEnum = (typeof WorkoutSessionScalarFieldEnum)[keyof typeof WorkoutSessionScalarFieldEnum]
@@ -942,16 +1034,9 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
- * Reference to a field of type 'Role'
+ * Reference to a field of type 'Boolean'
  */
-export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role'>
-    
-
-
-/**
- * Reference to a field of type 'Role[]'
- */
-export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role[]'>
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -970,6 +1055,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Role'
+ */
+export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role'>
+    
+
+
+/**
+ * Reference to a field of type 'Role[]'
+ */
+export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Role[]'>
+    
+
+
+/**
  * Reference to a field of type 'ExerciseSource'
  */
 export type EnumExerciseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExerciseSource'>
@@ -980,13 +1079,6 @@ export type EnumExerciseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'ExerciseSource[]'
  */
 export type ListEnumExerciseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExerciseSource[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -1126,6 +1218,7 @@ export type PrismaClientOptions = ({
   comments?: runtime.SqlCommenterPlugin[]
 }
 export type GlobalOmitConfig = {
+  gym?: Prisma.GymOmit
   user?: Prisma.UserOmit
   exercise?: Prisma.ExerciseOmit
   workoutSession?: Prisma.WorkoutSessionOmit

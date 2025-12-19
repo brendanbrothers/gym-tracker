@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
 function isTrainerOrAdmin(role: string | undefined): boolean {
-  return role === "TRAINER" || role === "ADMIN"
+  return role === "TRAINER" || role === "GYM_ADMIN" || role === "ADMIN"
 }
 
 async function getWorkoutOwner(workoutId: string): Promise<string | null> {

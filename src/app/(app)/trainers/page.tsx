@@ -14,14 +14,14 @@ import { UserForm } from "../users/user-form"
 
 export default async function TrainersPage() {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
 
   if (!isTrainer) {
     redirect("/")
   }
 
   const trainers = await prisma.user.findMany({
-    where: { role: { in: ["TRAINER", "ADMIN"] } },
+    where: { role: { in: ["TRAINER", "GYM_ADMIN", "ADMIN"] } },
     orderBy: { name: "asc" },
   })
 

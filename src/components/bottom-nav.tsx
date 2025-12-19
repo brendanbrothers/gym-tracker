@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
 function getMenuItems(role: string | undefined) {
-  const isTrainer = role === "TRAINER" || role === "ADMIN"
+  const isTrainer = role === "TRAINER" || role === "GYM_ADMIN" || role === "ADMIN"
 
   if (isTrainer) {
     // Trainer mobile nav - limit to 5 most important items

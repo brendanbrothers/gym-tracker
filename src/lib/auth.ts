@@ -19,6 +19,11 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          include: {
+            gym: {
+              select: { id: true, slug: true, name: true },
+            },
+          },
         })
 
         if (!user) {
@@ -39,6 +44,9 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          gymId: user.gym?.id ?? null,
+          gymSlug: user.gym?.slug ?? null,
+          gymName: user.gym?.name ?? null,
         }
       },
     }),
@@ -50,6 +58,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        token.gymId = user.gymId
+        token.gymSlug = user.gymSlug
+        token.gymName = user.gymName
       }
       return token
     },
@@ -57,6 +68,9 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as string
+        session.user.gymId = token.gymId ?? null
+        session.user.gymSlug = token.gymSlug ?? null
+        session.user.gymName = token.gymName ?? null
       }
       return session
     },

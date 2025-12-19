@@ -15,7 +15,7 @@ import { NewWorkoutForm } from "./new-workout-form"
 export default async function WorkoutsPage() {
   const session = await getServerSession(authOptions)
   
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "ADMIN"
+  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
 
   const workouts = await prisma.workoutSession.findMany({
     where: isTrainer ? {} : { clientId: session?.user.id },

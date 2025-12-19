@@ -8,6 +8,26 @@ datasource db {
 }
 
 // ============================================================================
+// GYMS
+// ============================================================================
+
+model Gym {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users           User[]
+  exercises       Exercise[]
+  workoutSessions WorkoutSession[]
+
+  @@index([slug])
+}
+
+// ============================================================================
 // USERS & AUTHENTICATION
 // ============================================================================
 
@@ -20,6 +40,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Gym association
+  gym   Gym?    @relation(fields: [gymId], references: [id])
+  gymId String?
+
   // A client's workout sessions
   workoutSessions WorkoutSession[] @relation("ClientSessions")
 
@@ -31,11 +55,13 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([gymId])
 }
 
 enum Role {
   CLIENT
   TRAINER
+  GYM_ADMIN
   ADMIN
 }
 
@@ -54,11 +80,15 @@ model Exercise {
   source        ExerciseSource @default(CUSTOM)
   sourceId      String?
   isActive      Boolean        @default(true)
+  isGlobal      Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   createdBy   User?   @relation(fields: [createdById], references: [id])
   createdById String?
+
+  gym   Gym?    @relation(fields: [gymId], references: [id])
+  gymId String?
 
   setExercises SetExercise[]
 
@@ -66,6 +96,8 @@ model Exercise {
   @@index([name])
   @@index([category])
   @@index([primaryMuscle])
+  @@index([gymId])
+  @@index([isGlobal])
 }
 
 enum ExerciseSource {
@@ -91,11 +123,15 @@ model WorkoutSession {
   trainer   User?   @relation("TrainerSessions", fields: [trainerId], references: [id])
   trainerId String?
 
+  gym   Gym?    @relation(fields: [gymId], references: [id])
+  gymId String?
+
   sets WorkoutSet[]
 
   @@index([clientId])
   @@index([trainerId])
   @@index([date])
+  @@index([gymId])
 }
 
 enum SessionStatus {

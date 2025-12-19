@@ -18,6 +18,11 @@ export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
 /**
+ * Model Gym
+ * 
+ */
+export type Gym = Prisma.GymModel
+/**
  * Model User
  * 
  */
