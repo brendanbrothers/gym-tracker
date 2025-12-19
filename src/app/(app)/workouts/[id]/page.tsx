@@ -1,8 +1,29 @@
 import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
+import { Metadata } from "next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { WorkoutEditor } from "./workout-editor"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+
+  const workout = await prisma.workoutSession.findUnique({
+    where: { id },
+    select: { client: { select: { name: true } } },
+  })
+
+  if (!workout) {
+    return { title: "Workout | Gym Tracker" }
+  }
+
+  const firstName = workout.client.name.split(" ")[0]
+  return { title: `${firstName} | Gym Tracker` }
+}
 
 export default async function WorkoutPage({
   params,

@@ -132,17 +132,17 @@ export function WorkoutEditor({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Workout - {new Date(workout.date).toLocaleDateString("en-US")}
-          </h1>
-          <p className="text-muted-foreground">
-            Client: {workout.client.name}
-            {workout.trainer && ` • Trainer: ${workout.trainer.name}`}
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6 -mt-6 pt-6 border-b">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {workout.client.name} - {new Date(workout.date).toLocaleDateString("en-US")}
+            </h1>
+            <p className="text-muted-foreground">
+              {workout.trainer && `Trainer: ${workout.trainer.name}`}
+            </p>
+          </div>
+          <div className="flex gap-2">
           {canEdit && (
             <>
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -235,6 +235,7 @@ export function WorkoutEditor({
               Completed
             </span>
           )}
+        </div>
         </div>
       </div>
 
