@@ -259,7 +259,7 @@ function ExerciseRow({
           <div className="flex gap-1">
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" title="Edit">
                   <Pencil className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
@@ -334,7 +334,7 @@ function ExerciseRow({
             </Dialog>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" title="Delete">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>

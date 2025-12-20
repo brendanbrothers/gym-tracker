@@ -296,7 +296,7 @@ function SetCard({
         {!disabled && canEdit && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" title="Delete Set">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
@@ -386,7 +386,7 @@ function ExerciseGroup({
           <div className="flex gap-1">
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" title="Edit">
                   <Pencil className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
@@ -445,7 +445,7 @@ function ExerciseGroup({
             </Dialog>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" title="Delete Exercise">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -566,6 +566,7 @@ function RoundRow({
             variant={round.completed ? "default" : "outline"}
             size="sm"
             onClick={() => handleUpdate(!round.completed)}
+            title={round.completed ? "Mark Incomplete" : "Mark Complete"}
           >
             <Check className="h-4 w-4" />
           </Button>
@@ -574,6 +575,7 @@ function RoundRow({
               variant="ghost"
               size="sm"
               onClick={() => deleteExercise(round.id, workoutId)}
+              title="Delete Round"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
