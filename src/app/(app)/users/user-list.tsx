@@ -55,6 +55,7 @@ export function UserList({
   const router = useRouter()
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [error, setError] = useState("")
+  const [actionError, setActionError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const activeUsers = users.filter((u) => u.status === "ACTIVE")
@@ -79,18 +80,20 @@ export function UserList({
   }
 
   async function handleMarkAsFormer(userId: string) {
+    setActionError("")
     const result = await markUserAsFormer(userId)
     if (result.error) {
-      alert(result.error)
+      setActionError(result.error)
     } else {
       router.refresh()
     }
   }
 
   async function handleReactivate(userId: string) {
+    setActionError("")
     const result = await reactivateUser(userId)
     if (result.error) {
-      alert(result.error)
+      setActionError(result.error)
     } else {
       router.refresh()
     }
@@ -111,6 +114,9 @@ export function UserList({
 
   return (
     <>
+      {actionError && (
+        <p className="text-sm text-red-500 mb-4">{actionError}</p>
+      )}
       <Table>
         <TableHeader>
           <TableRow>

@@ -92,8 +92,18 @@ export async function uploadLogo(formData: FormData) {
   }
 
   const file = formData.get("file") as File
-  if (!file) {
+  if (!file || file.size === 0) {
     return { error: "No file provided" }
+  }
+
+  const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+  if (file.size > MAX_SIZE) {
+    return { error: "File too large. Maximum size is 2MB." }
+  }
+
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return { error: "Invalid file type. Only JPEG, PNG, GIF, WebP, and SVG are allowed." }
   }
 
   // For now, we'll store as base64 data URL

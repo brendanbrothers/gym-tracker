@@ -3,6 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "./db"
 
+const TRAINER_ROLES = ["TRAINER", "GYM_ADMIN", "ADMIN"] as const
+
+export function isTrainer(role: string | undefined): boolean {
+  return TRAINER_ROLES.includes(role as (typeof TRAINER_ROLES)[number])
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [

@@ -2,7 +2,7 @@
 
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
 export async function createWorkout(formData: FormData) {
@@ -12,8 +12,7 @@ export async function createWorkout(formData: FormData) {
     return { error: "Unauthorized" }
   }
 
-  // Only trainers and admins can create workouts
-  if (session.user.role !== "TRAINER" && session.user.role !== "ADMIN") {
+  if (!isTrainer(session.user.role)) {
     return { error: "Unauthorized: Only trainers can create workouts" }
   }
 

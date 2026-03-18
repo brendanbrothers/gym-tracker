@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ClipboardList, Calendar } from "lucide-react"
+import { StatusBadge } from "@/components/status-badge"
 import { prisma } from "@/lib/db"
 import {
   Card,
@@ -193,15 +194,7 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
                     </TableCell>
                     <TableCell>
                       <Link href={`/workouts/${workout.id}`} className="block">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            workout.status === "COMPLETED"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {workout.status.replace("_", " ")}
-                        </span>
+                        <StatusBadge status={workout.status} />
                       </Link>
                     </TableCell>
                   </TableRow>

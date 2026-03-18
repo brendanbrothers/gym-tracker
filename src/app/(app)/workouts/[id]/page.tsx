@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { Metadata } from "next"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { WorkoutEditor } from "./workout-editor"
 
@@ -56,7 +56,7 @@ export default async function WorkoutPage({
     notFound()
   }
 
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const isTrainer = checkTrainer(session?.user.role)
   const isOwner = workout.clientId === session?.user.id
 
   // Access control: clients can only see their own workouts

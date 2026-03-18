@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth"
+import { z } from "zod"
 import { prisma } from "@/lib/db"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer } from "@/lib/auth"
+
+const exerciseSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100).trim(),
+  category: z.string().optional().nullable(),
+  primaryMuscle: z.string().optional().nullable(),
+  equipment: z.string().optional().nullable(),
+})
 
 export async function getExercises(params: {
   search?: string
@@ -68,19 +76,22 @@ export async function getFilterOptions() {
 export async function createExercise(formData: FormData) {
   const session = await getServerSession(authOptions)
 
-  // Only trainers and admins can create exercises
-  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized: Only trainers can create exercises" }
   }
 
-  const name = formData.get("name") as string
-  const category = formData.get("category") as string | null
-  const primaryMuscle = formData.get("primaryMuscle") as string | null
-  const equipment = formData.get("equipment") as string | null
+  const parsed = exerciseSchema.safeParse({
+    name: formData.get("name"),
+    category: formData.get("category") || null,
+    primaryMuscle: formData.get("primaryMuscle") || null,
+    equipment: formData.get("equipment") || null,
+  })
 
-  if (!name) {
-    return { error: "Name is required" }
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
   }
+
+  const { name, category, primaryMuscle, equipment } = parsed.data
 
   // Check for duplicate name
   const existing = await prisma.exercise.findFirst({
@@ -114,19 +125,22 @@ export async function createExercise(formData: FormData) {
 export async function updateExercise(exerciseId: string, formData: FormData) {
   const session = await getServerSession(authOptions)
 
-  // Only trainers and admins can update exercises
-  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized: Only trainers can update exercises" }
   }
 
-  const name = formData.get("name") as string
-  const category = formData.get("category") as string | null
-  const primaryMuscle = formData.get("primaryMuscle") as string | null
-  const equipment = formData.get("equipment") as string | null
+  const parsed = exerciseSchema.safeParse({
+    name: formData.get("name"),
+    category: formData.get("category") || null,
+    primaryMuscle: formData.get("primaryMuscle") || null,
+    equipment: formData.get("equipment") || null,
+  })
 
-  if (!name) {
-    return { error: "Name is required" }
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
   }
+
+  const { name, category, primaryMuscle, equipment } = parsed.data
 
   // Check for duplicate name (excluding current exercise)
   const existing = await prisma.exercise.findFirst({
@@ -162,8 +176,7 @@ export async function updateExercise(exerciseId: string, formData: FormData) {
 export async function deleteExercise(exerciseId: string) {
   const session = await getServerSession(authOptions)
 
-  // Only trainers and admins can delete exercises
-  if (!session || (session.user.role !== "TRAINER" && session.user.role !== "ADMIN")) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized: Only trainers can delete exercises" }
   }
 

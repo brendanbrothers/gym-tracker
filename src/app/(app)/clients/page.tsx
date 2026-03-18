@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { UserForm } from "../users/user-form"
 import { UserList } from "../users/user-list"
@@ -12,7 +12,7 @@ export default async function ClientsPage({
   searchParams: Promise<{ showFormer?: string }>
 }) {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const isTrainer = checkTrainer(session?.user.role)
 
   if (!isTrainer) {
     redirect("/")

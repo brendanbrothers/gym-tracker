@@ -1,7 +1,7 @@
 "use server"
 
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
 export async function getProgressData(
@@ -11,10 +11,10 @@ export async function getProgressData(
   endDate?: string
 ) {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const userIsTrainer = isTrainer(session?.user.role)
 
   // For non-trainers, always filter by their own clientId
-  const effectiveClientId = isTrainer ? clientId : session?.user.id
+  const effectiveClientId = userIsTrainer ? clientId : session?.user.id
 
   // Build date filter
   const dateFilter: { gte?: Date; lte?: Date } = {}
@@ -106,7 +106,7 @@ export async function getProgressData(
 
 export async function getExercisesWithHistory() {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const userIsTrainer = isTrainer(session?.user.role)
 
   const exercises = await prisma.exercise.findMany({
     where: {
@@ -114,7 +114,7 @@ export async function getExercisesWithHistory() {
         some: {
           completed: true,
           // For non-trainers, only show exercises they have completed
-          ...(isTrainer ? {} : {
+          ...(userIsTrainer ? {} : {
             workoutSet: {
               workoutSession: {
                 clientId: session?.user.id,

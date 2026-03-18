@@ -1,12 +1,12 @@
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { ExerciseFilters } from "./exercise-filters"
 import { getFilterOptions } from "./actions"
 
 export default async function ExercisesPage() {
   const session = await getServerSession(authOptions)
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const isTrainer = checkTrainer(session?.user.role)
 
   const exercises = await prisma.exercise.findMany({
     include: {

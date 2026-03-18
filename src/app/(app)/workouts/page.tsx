@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import Link from "next/link"
-import { authOptions } from "@/lib/auth"
+import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import {
   Table,
@@ -11,11 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { NewWorkoutForm } from "./new-workout-form"
+import { StatusBadge } from "@/components/status-badge"
 
 export default async function WorkoutsPage() {
   const session = await getServerSession(authOptions)
   
-  const isTrainer = session?.user.role === "TRAINER" || session?.user.role === "GYM_ADMIN" || session?.user.role === "ADMIN"
+  const isTrainer = checkTrainer(session?.user.role)
 
   const workouts = await prisma.workoutSession.findMany({
     where: isTrainer ? {} : { clientId: session?.user.id },
@@ -95,17 +96,7 @@ export default async function WorkoutsPage() {
                 </TableCell>
                 <TableCell>
                   <Link href={`/workouts/${workout.id}`} className="block">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        workout.status === "COMPLETED"
-                          ? "bg-green-100 text-green-800"
-                          : workout.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {workout.status.replace("_", " ")}
-                    </span>
+                    <StatusBadge status={workout.status} />
                   </Link>
                 </TableCell>
               </TableRow>

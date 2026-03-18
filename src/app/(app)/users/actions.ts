@@ -3,24 +3,42 @@
 import { getServerSession } from "next-auth"
 import { revalidatePath } from "next/cache"
 import bcrypt from "bcryptjs"
-import { authOptions } from "@/lib/auth"
+import { z } from "zod"
+import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+
+const createUserSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z.enum(["CLIENT", "TRAINER", "GYM_ADMIN", "ADMIN"]),
+})
+
+const updateUserSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal("")),
+})
 
 export async function createUser(formData: FormData) {
   const session = await getServerSession(authOptions)
 
-  if (!session || !["TRAINER", "GYM_ADMIN", "ADMIN"].includes(session.user.role)) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized" }
   }
 
-  const name = formData.get("name") as string
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-  const role = formData.get("role") as string
+  const parsed = createUserSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    role: formData.get("role"),
+  })
 
-  if (!name || !email || !password || !role) {
-    return { error: "All fields are required" }
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
   }
+
+  const { name, email, password, role } = parsed.data
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -37,7 +55,7 @@ export async function createUser(formData: FormData) {
       name,
       email,
       password: hashedPassword,
-      role: role as "CLIENT" | "TRAINER" | "ADMIN",
+      role,
       gymId: session.user.gymId,
     },
   })
@@ -48,17 +66,21 @@ export async function createUser(formData: FormData) {
 export async function updateUser(userId: string, formData: FormData) {
   const session = await getServerSession(authOptions)
 
-  if (!session || !["TRAINER", "GYM_ADMIN", "ADMIN"].includes(session.user.role)) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized" }
   }
 
-  const name = formData.get("name") as string
-  const email = formData.get("email") as string
-  const newPassword = formData.get("password") as string
+  const parsed = updateUserSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password") || "",
+  })
 
-  if (!name || !email) {
-    return { error: "Name and email are required" }
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
   }
+
+  const { name, email, password: newPassword } = parsed.data
 
   // Check if email is taken by another user
   const existingUser = await prisma.user.findUnique({
@@ -92,7 +114,7 @@ export async function updateUser(userId: string, formData: FormData) {
 export async function markUserAsFormer(userId: string) {
   const session = await getServerSession(authOptions)
 
-  if (!session || !["TRAINER", "GYM_ADMIN", "ADMIN"].includes(session.user.role)) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized" }
   }
 
@@ -114,7 +136,7 @@ export async function markUserAsFormer(userId: string) {
 export async function reactivateUser(userId: string) {
   const session = await getServerSession(authOptions)
 
-  if (!session || !["TRAINER", "GYM_ADMIN", "ADMIN"].includes(session.user.role)) {
+  if (!session || !isTrainer(session.user.role)) {
     return { error: "Unauthorized" }
   }
 

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, FormEvent, KeyboardEvent } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { Dumbbell } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,14 +16,13 @@ import {
 } from "@/components/ui/card"
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault()
     setError("")
     setLoading(true)
 
@@ -50,11 +49,23 @@ export default function LoginPage() {
     }
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !loading) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>GymTracker</CardTitle>
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary">
+              <Dumbbell className="w-8 h-8 text-primary-foreground" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl">GymTracker</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,6 +77,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
                 required
               />
             </div>
@@ -76,6 +88,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
                 required
               />
             </div>

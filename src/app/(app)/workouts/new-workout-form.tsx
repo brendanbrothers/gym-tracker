@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,12 +41,25 @@ type RecentWorkout = {
   }[]
 }
 
+function formatWorkoutSummary(workout: RecentWorkout) {
+  const exerciseNames = new Set<string>()
+  workout.sets.forEach((set) => {
+    set.exercises.forEach((ex) => {
+      exerciseNames.add(ex.exercise.name)
+    })
+  })
+  const names = Array.from(exerciseNames).join(", ")
+  return `${new Date(workout.date).toLocaleDateString()} — ${names}`
+}
+
 export function NewWorkoutForm({
   clients,
   trainers,
+  trigger,
 }: {
   clients: User[]
   trainers: User[]
+  trigger?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
@@ -80,24 +94,12 @@ export function NewWorkoutForm({
     }
   }
 
-  function formatWorkoutSummary(workout: RecentWorkout) {
-    const exerciseNames = new Set<string>()
-    workout.sets.forEach((set) => {
-      set.exercises.forEach((ex) => {
-        exerciseNames.add(ex.exercise.name)
-      })
-    })
-    const names = Array.from(exerciseNames).slice(0, 3).join(", ")
-    const more = exerciseNames.size > 3 ? ` +${exerciseNames.size - 3} more` : ""
-    return `${new Date(workout.date).toLocaleDateString()} - ${names}${more}`
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>New Workout</Button>
+        {trigger ?? <Button>New Workout</Button>}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Start New Workout</DialogTitle>
         </DialogHeader>
@@ -110,10 +112,10 @@ export function NewWorkoutForm({
               value={selectedClient}
               onValueChange={setSelectedClient}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}
@@ -125,10 +127,10 @@ export function NewWorkoutForm({
           <div className="space-y-2">
             <Label htmlFor="trainerId">Trainer (optional)</Label>
             <Select name="trainerId">
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select trainer" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 {trainers.map((trainer) => (
                   <SelectItem key={trainer.id} value={trainer.id}>
                     {trainer.name}
@@ -149,7 +151,7 @@ export function NewWorkoutForm({
           <div className="space-y-2">
             <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>
             <Select name="copyFromId" disabled={!selectedClient || loadingWorkouts}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue
                   placeholder={
                     !selectedClient
@@ -160,10 +162,10 @@ export function NewWorkoutForm({
                   }
                 />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="none">Start fresh</SelectItem>
                 {recentWorkouts.map((workout) => (
-                  <SelectItem key={workout.id} value={workout.id}>
+                  <SelectItem key={workout.id} value={workout.id} className="whitespace-normal">
                     {formatWorkoutSummary(workout)}
                   </SelectItem>
                 ))}

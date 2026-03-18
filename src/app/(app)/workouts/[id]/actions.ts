@@ -2,12 +2,41 @@
 
 import { revalidatePath } from "next/cache"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { z } from "zod"
+import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-function isTrainerOrAdmin(role: string | undefined): boolean {
-  return role === "TRAINER" || role === "GYM_ADMIN" || role === "ADMIN"
-}
+const optionalInt = z.string().nullable().optional().transform((v) =>
+  v && v.trim() !== "" ? parseInt(v, 10) : null
+).refine((v) => v === null || !isNaN(v), { message: "Must be a valid number" })
+
+const optionalFloat = z.string().nullable().optional().transform((v) =>
+  v && v.trim() !== "" ? parseFloat(v) : null
+).refine((v) => v === null || !isNaN(v), { message: "Must be a valid number" })
+
+const addExerciseSchema = z.object({
+  exerciseId: z.string().min(1, "Exercise is required"),
+  modifier: z.string().nullable().optional(),
+  targetReps: optionalInt,
+  targetWeight: optionalFloat,
+  targetDuration: optionalInt,
+  rounds: z.string().optional().transform((v) => (v ? parseInt(v, 10) : 1)).pipe(z.number().min(1).max(20)),
+})
+
+const updateExerciseSchema = z.object({
+  actualReps: optionalInt,
+  actualWeight: optionalFloat,
+  actualDuration: optionalInt,
+  notes: z.string().nullable().optional(),
+  completed: z.boolean(),
+})
+
+const updateTargetsSchema = z.object({
+  targetReps: optionalInt,
+  targetWeight: optionalFloat,
+  targetDuration: optionalInt,
+  modifier: z.string().nullable().optional(),
+})
 
 async function getWorkoutOwner(workoutId: string): Promise<string | null> {
   const workout = await prisma.workoutSession.findUnique({
@@ -19,7 +48,7 @@ async function getWorkoutOwner(workoutId: string): Promise<string | null> {
 
 async function requireTrainer() {
   const session = await getServerSession(authOptions)
-  if (!session || !isTrainerOrAdmin(session.user.role)) {
+  if (!session || !isTrainer(session.user.role)) {
     throw new Error("Unauthorized: Trainer access required")
   }
   return session
@@ -32,8 +61,8 @@ async function requireTrainerOrOwner(workoutId: string) {
   }
   const ownerId = await getWorkoutOwner(workoutId)
   const isOwner = ownerId === session.user.id
-  const isTrainer = isTrainerOrAdmin(session.user.role)
-  if (!isOwner && !isTrainer) {
+  const userIsTrainer = isTrainer(session.user.role)
+  if (!isOwner && !userIsTrainer) {
     throw new Error("Unauthorized: You can only access your own workouts")
   }
   return session
@@ -76,20 +105,28 @@ export async function addExerciseToSet(
   ) {
     await requireTrainer()
 
-    const exerciseId = formData.get("exerciseId") as string
-    const modifier = formData.get("modifier") as string | null
-    const targetReps = formData.get("targetReps") as string | null
-    const targetWeight = formData.get("targetWeight") as string | null
-    const targetDuration = formData.get("targetDuration") as string | null
-    const rounds = parseInt(formData.get("rounds") as string) || 1
-  
+    const parsed = addExerciseSchema.safeParse({
+      exerciseId: formData.get("exerciseId"),
+      modifier: formData.get("modifier") || null,
+      targetReps: formData.get("targetReps"),
+      targetWeight: formData.get("targetWeight"),
+      targetDuration: formData.get("targetDuration"),
+      rounds: formData.get("rounds"),
+    })
+
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0].message }
+    }
+
+    const { exerciseId, modifier, targetReps, targetWeight, targetDuration, rounds } = parsed.data
+
     const lastExercise = await prisma.setExercise.findFirst({
       where: { workoutSetId: setId },
       orderBy: { order: "desc" },
     })
-  
+
     const newOrder = (lastExercise?.order ?? 0) + 1
-  
+
     // Create an entry for each round
     for (let round = 1; round <= rounds; round++) {
       await prisma.setExercise.create({
@@ -99,13 +136,13 @@ export async function addExerciseToSet(
           order: newOrder,
           round,
           modifier: modifier || null,
-          targetReps: targetReps ? parseInt(targetReps) : null,
-          targetWeight: targetWeight ? parseFloat(targetWeight) : null,
-          targetDuration: targetDuration ? parseInt(targetDuration) : null,
+          targetReps,
+          targetWeight,
+          targetDuration,
         },
       })
     }
-  
+
     revalidatePath(`/workouts/${workoutId}`)
   }
 
@@ -156,21 +193,21 @@ export async function updateExercise(
 ) {
   await requireTrainerOrOwner(workoutId)
 
-  const actualReps = formData.get("actualReps") as string | null
-  const actualWeight = formData.get("actualWeight") as string | null
-  const actualDuration = formData.get("actualDuration") as string | null
-  const notes = formData.get("notes") as string | null
-  const completed = formData.get("completed") === "true"
+  const parsed = updateExerciseSchema.safeParse({
+    actualReps: formData.get("actualReps"),
+    actualWeight: formData.get("actualWeight"),
+    actualDuration: formData.get("actualDuration"),
+    notes: formData.get("notes") || null,
+    completed: formData.get("completed") === "true",
+  })
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message }
+  }
 
   await prisma.setExercise.update({
     where: { id: exerciseId },
-    data: {
-      actualReps: actualReps ? parseInt(actualReps) : null,
-      actualWeight: actualWeight ? parseFloat(actualWeight) : null,
-      actualDuration: actualDuration ? parseInt(actualDuration) : null,
-      notes: notes || null,
-      completed,
-    },
+    data: parsed.data,
   })
 
   revalidatePath(`/workouts/${workoutId}`)
@@ -204,24 +241,25 @@ export async function updateExerciseTargets(
   ) {
     await requireTrainer()
 
-    const targetReps = formData.get("targetReps") as string | null
-    const targetWeight = formData.get("targetWeight") as string | null
-    const targetDuration = formData.get("targetDuration") as string | null
-    const modifier = formData.get("modifier") as string | null
-  
+    const parsed = updateTargetsSchema.safeParse({
+      targetReps: formData.get("targetReps"),
+      targetWeight: formData.get("targetWeight"),
+      targetDuration: formData.get("targetDuration"),
+      modifier: formData.get("modifier") || null,
+    })
+
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0].message }
+    }
+
     await prisma.setExercise.update({
       where: { id: exerciseId },
-      data: {
-        targetReps: targetReps ? parseInt(targetReps) : null,
-        targetWeight: targetWeight ? parseFloat(targetWeight) : null,
-        targetDuration: targetDuration ? parseInt(targetDuration) : null,
-        modifier: modifier || null,
-      },
+      data: parsed.data,
     })
-  
+
     revalidatePath(`/workouts/${workoutId}`)
   }
-  
+
   export async function updateAllRoundsTargets(
     setId: string,
     exerciseId: string,
@@ -231,25 +269,26 @@ export async function updateExerciseTargets(
   ) {
     await requireTrainer()
 
-    const targetReps = formData.get("targetReps") as string | null
-    const targetWeight = formData.get("targetWeight") as string | null
-    const targetDuration = formData.get("targetDuration") as string | null
-    const modifier = formData.get("modifier") as string | null
-  
+    const parsed = updateTargetsSchema.safeParse({
+      targetReps: formData.get("targetReps"),
+      targetWeight: formData.get("targetWeight"),
+      targetDuration: formData.get("targetDuration"),
+      modifier: formData.get("modifier") || null,
+    })
+
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0].message }
+    }
+
     await prisma.setExercise.updateMany({
       where: {
         workoutSetId: setId,
         exerciseId,
         order,
       },
-      data: {
-        targetReps: targetReps ? parseInt(targetReps) : null,
-        targetWeight: targetWeight ? parseFloat(targetWeight) : null,
-        targetDuration: targetDuration ? parseInt(targetDuration) : null,
-        modifier: modifier || null,
-      },
+      data: parsed.data,
     })
-  
+
     revalidatePath(`/workouts/${workoutId}`)
   }
 
