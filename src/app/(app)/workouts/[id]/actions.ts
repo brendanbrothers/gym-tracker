@@ -5,6 +5,13 @@ import { getServerSession } from "next-auth"
 import { z } from "zod"
 import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import {
+  collectSessionPbs,
+  evaluateRoundForPb,
+  getPersonalBests,
+  type PbHit,
+  type PersonalBests,
+} from "@/lib/personal-bests"
 
 const optionalInt = z.string().nullable().optional().transform((v) =>
   v && v.trim() !== "" ? parseInt(v, 10) : null
@@ -210,7 +217,52 @@ export async function updateExercise(
     data: parsed.data,
   })
 
+  // When a round is completed, check whether it beat the client's prior bests so
+  // the UI can celebrate it in the moment.
+  let pbs: PbHit[] = []
+  if (parsed.data.completed) {
+    const saved = await prisma.setExercise.findUnique({
+      where: { id: exerciseId },
+      select: {
+        id: true,
+        exerciseId: true,
+        actualReps: true,
+        actualWeight: true,
+        actualDuration: true,
+        workoutSet: { select: { workoutSession: { select: { clientId: true } } } },
+      },
+    })
+    if (saved) {
+      pbs = await evaluateRoundForPb({
+        exerciseId: saved.exerciseId,
+        clientId: saved.workoutSet.workoutSession.clientId,
+        setExerciseId: saved.id,
+        actualReps: saved.actualReps,
+        actualWeight: saved.actualWeight,
+        actualDuration: saved.actualDuration,
+      })
+    }
+  }
+
   revalidatePath(`/workouts/${workoutId}`)
+  return { pbs }
+}
+
+// A client's current PBs for an exercise. Shown to trainers while programming
+// targets, and to clients on their own workouts. Either a trainer (any client)
+// or the client viewing their own data may read it.
+export async function getClientPersonalBests(
+  clientId: string,
+  exerciseId: string
+): Promise<PersonalBests> {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    throw new Error("Unauthorized")
+  }
+  if (!isTrainer(session.user.role) && session.user.id !== clientId) {
+    throw new Error("Unauthorized: You can only view your own personal bests")
+  }
+  return getPersonalBests(exerciseId, clientId)
 }
 
 export async function deleteExercise(exerciseId: string, workoutId: string) {
@@ -230,6 +282,14 @@ export async function completeWorkout(workoutId: string) {
     where: { id: workoutId },
     data: { status: "COMPLETED" },
   })
+
+  // Gather every PB set in this session for a post-workout digest. No email
+  // provider is configured yet — assemble the payload now, wire delivery later.
+  const sessionPbs = await collectSessionPbs(workoutId)
+  if (sessionPbs.length > 0) {
+    // TODO: send digest email ("you beat N of your bests today") via an email
+    // provider (e.g. Resend). For now the data is computed and available here.
+  }
 
   revalidatePath(`/workouts/${workoutId}`)
 }

@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { PbMetric, PersonalBests } from "@/lib/personal-bests"
 
 export type SetHistoryRow = {
   id: string
@@ -21,6 +22,9 @@ export type SetHistoryRow = {
   actualReps: number | null
   actualWeight: number | null
   actualDuration: number | null
+  est1RM: number | null
+  // Which all-time PB records this round currently holds.
+  pbMetrics: PbMetric[]
 }
 
 function formatDate(date: string) {
@@ -50,26 +54,35 @@ function ValueWithTarget({
   )
 }
 
-export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
+function PbStar({ label }: { label: string }) {
+  return <span title={`Personal best — ${label}`}> ★</span>
+}
+
+export function SetHistoryTable({
+  rows,
+  personalBests,
+}: {
+  rows: SetHistoryRow[]
+  personalBests: PersonalBests
+}) {
   if (rows.length === 0) return null
 
   const hasWeight = rows.some((r) => r.actualWeight !== null)
   const hasDuration = rows.some((r) => r.actualDuration !== null)
+  const has1RM = rows.some((r) => r.est1RM !== null)
 
-  const maxWeight = hasWeight
-    ? Math.max(...rows.map((r) => r.actualWeight ?? -Infinity))
-    : null
-  const maxReps = rows.some((r) => r.actualReps !== null)
-    ? Math.max(...rows.map((r) => r.actualReps ?? -Infinity))
-    : null
-  const maxDuration = hasDuration
-    ? Math.max(...rows.map((r) => r.actualDuration ?? -Infinity))
-    : null
-
+  // True all-time bests, regardless of the visible date range.
   const summaryParts: string[] = []
-  if (maxWeight !== null) summaryParts.push(`${maxWeight} lbs`)
-  if (maxReps !== null) summaryParts.push(`${maxReps} reps`)
-  if (maxDuration !== null) summaryParts.push(`${maxDuration}s`)
+  if (personalBests.maxWeight)
+    summaryParts.push(`${personalBests.maxWeight.value} lbs`)
+  if (personalBests.est1RM)
+    summaryParts.push(`est. 1RM ${Math.round(personalBests.est1RM.value)}`)
+  if (personalBests.maxRepsUnbroken)
+    summaryParts.push(`${personalBests.maxRepsUnbroken.value} reps`)
+  if (personalBests.totalRepsTarget)
+    summaryParts.push(`${personalBests.totalRepsTarget.value} total reps`)
+  if (personalBests.maxDuration)
+    summaryParts.push(`${personalBests.maxDuration.value}s`)
 
   return (
     <div>
@@ -92,6 +105,7 @@ export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
             <TableHead>Set</TableHead>
             <TableHead className="text-right">Reps</TableHead>
             {hasWeight && <TableHead className="text-right">Weight</TableHead>}
+            {has1RM && <TableHead className="text-right">Est. 1RM</TableHead>}
             {hasDuration && (
               <TableHead className="text-right">Duration</TableHead>
             )}
@@ -99,12 +113,8 @@ export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const isMaxWeight =
-              maxWeight !== null && row.actualWeight === maxWeight
-            const isMaxReps = maxReps !== null && row.actualReps === maxReps
-            const isMaxDuration =
-              maxDuration !== null && row.actualDuration === maxDuration
-            const isBest = isMaxWeight || isMaxReps || isMaxDuration
+            const pbs = new Set(row.pbMetrics)
+            const isBest = pbs.size > 0
             return (
               <TableRow key={row.id} className={isBest ? "bg-muted/50" : ""}>
                 <TableCell>{formatDate(row.date)}</TableCell>
@@ -114,7 +124,7 @@ export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
                     actual={row.actualReps}
                     target={row.targetReps}
                   />
-                  {isMaxReps && <span title="Best reps"> ★</span>}
+                  {pbs.has("maxRepsUnbroken") && <PbStar label="most reps" />}
                 </TableCell>
                 {hasWeight && (
                   <TableCell className="text-right">
@@ -122,7 +132,13 @@ export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
                       actual={row.actualWeight}
                       target={row.targetWeight}
                     />
-                    {isMaxWeight && <span title="Best weight"> ★</span>}
+                    {pbs.has("maxWeight") && <PbStar label="heaviest weight" />}
+                  </TableCell>
+                )}
+                {has1RM && (
+                  <TableCell className="text-right">
+                    {row.est1RM !== null ? Math.round(row.est1RM) : "—"}
+                    {pbs.has("est1RM") && <PbStar label="estimated 1-rep max" />}
                   </TableCell>
                 )}
                 {hasDuration && (
@@ -131,7 +147,7 @@ export function SetHistoryTable({ rows }: { rows: SetHistoryRow[] }) {
                       actual={row.actualDuration}
                       target={row.targetDuration}
                     />
-                    {isMaxDuration && <span title="Best duration"> ★</span>}
+                    {pbs.has("maxDuration") && <PbStar label="longest hold" />}
                   </TableCell>
                 )}
               </TableRow>

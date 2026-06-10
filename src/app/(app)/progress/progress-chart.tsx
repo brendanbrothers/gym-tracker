@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import type { PersonalBests } from "@/lib/personal-bests"
 import { getExerciseSetHistory, getProgressData } from "./actions"
 import { SetHistoryRow, SetHistoryTable } from "./set-history-table"
 
@@ -58,6 +59,7 @@ export function ProgressChart({
   const [endDate, setEndDate] = useState<string>("")
   const [data, setData] = useState<ProgressData[]>([])
   const [setHistory, setSetHistory] = useState<SetHistoryRow[]>([])
+  const [personalBests, setPersonalBests] = useState<PersonalBests>({})
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -80,7 +82,8 @@ export function ProgressChart({
       ),
     ]).then(([progress, history]) => {
       setData(progress)
-      setSetHistory(history)
+      setSetHistory(history.rows)
+      setPersonalBests(history.personalBests)
       setLoading(false)
     })
   }, [selectedExercise, selectedClient, startDate, endDate])
@@ -249,7 +252,7 @@ export function ProgressChart({
             </div>
           </div>
 
-          <SetHistoryTable rows={setHistory} />
+          <SetHistoryTable rows={setHistory} personalBests={personalBests} />
         </div>
       )}
     </div>
