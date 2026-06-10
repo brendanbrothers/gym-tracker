@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Plus, Trash2, Check } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, Trophy } from "lucide-react"
+import { toast } from "sonner"
+
+import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +54,7 @@ import {
   createExercise,
   addRound,
   updateWorkoutDetails,
+  getClientPersonalBests,
 } from "./actions"
 
 import {
@@ -58,6 +62,108 @@ import {
     PRIMARY_MUSCLES,
     EQUIPMENT,
   } from "@/lib/constants"
+
+// Client-side PB presentation. The label/format logic is duplicated here rather
+// than imported from @/lib/personal-bests, which pulls in Prisma (server-only).
+const PB_LABELS: Record<PbMetric, string> = {
+  est1RM: "Est. 1RM",
+  maxWeight: "Heaviest weight",
+  bestVolume: "Best volume",
+  maxRepsUnbroken: "Most reps",
+  maxDuration: "Longest hold",
+  totalRepsTarget: "Most total reps",
+}
+
+function formatPbValue(metric: PbMetric, value: number): string {
+  switch (metric) {
+    case "maxRepsUnbroken":
+    case "totalRepsTarget":
+      return `${value} reps`
+    case "maxDuration":
+      return `${value}s`
+    case "bestVolume":
+      return `${Math.round(value)} lbs vol`
+    case "est1RM":
+    case "maxWeight":
+    default:
+      return `${Math.round(value * 10) / 10} lbs`
+  }
+}
+
+function pbHitText(hit: PbHit): string {
+  const label = `${PB_LABELS[hit.metric]}: ${formatPbValue(hit.metric, hit.newValue)}`
+  if (hit.previousValue === null) return `${label} (first time!)`
+  const delta = Math.round((hit.delta ?? 0) * 10) / 10
+  return `${label} (+${delta} from ${formatPbValue(hit.metric, hit.previousValue)})`
+}
+
+// Shows a trainer the client's current PBs for the selected exercise while they
+// program targets, and flags when the entered target would be a new best.
+function PersonalBestHint({
+  clientId,
+  exerciseId,
+  enabled,
+  liveReps,
+  liveWeight,
+  hideWhenEmpty = false,
+}: {
+  clientId: string
+  exerciseId: string | null
+  enabled: boolean
+  liveReps?: number | null
+  liveWeight?: number | null
+  hideWhenEmpty?: boolean
+}) {
+  const [pbs, setPbs] = useState<PersonalBests | null>(null)
+
+  useEffect(() => {
+    if (!enabled || !exerciseId) return
+    let active = true
+    getClientPersonalBests(clientId, exerciseId).then((p) => {
+      if (active) setPbs(p)
+    })
+    // Clear on disable / exercise change so a stale PB never lingers.
+    return () => {
+      active = false
+      setPbs(null)
+    }
+  }, [enabled, exerciseId, clientId])
+
+  if (!exerciseId || !pbs) return null
+
+  const parts: string[] = []
+  if (pbs.maxRepsUnbroken) parts.push(`${pbs.maxRepsUnbroken.value} reps`)
+  if (pbs.maxWeight) parts.push(`${pbs.maxWeight.value} lbs`)
+  if (pbs.est1RM) parts.push(`est. 1RM ${Math.round(pbs.est1RM.value)}`)
+  if (pbs.maxDuration) parts.push(`${pbs.maxDuration.value}s`)
+
+  const isPbAttempt =
+    (liveReps != null &&
+      pbs.maxRepsUnbroken != null &&
+      liveReps > pbs.maxRepsUnbroken.value) ||
+    (liveWeight != null &&
+      pbs.maxWeight != null &&
+      liveWeight > pbs.maxWeight.value)
+
+  if (parts.length === 0) {
+    if (hideWhenEmpty) return null
+    return (
+      <p className="text-xs text-muted-foreground">
+        No personal bests yet for this client — anything counts as a first!
+      </p>
+    )
+  }
+
+  return (
+    <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+      <span className="font-medium text-foreground">Current PB:</span>{" "}
+      {parts.join(" · ")}
+      {isPbAttempt && (
+        <span className="ml-2 font-medium text-amber-600">🔥 PB attempt</span>
+      )}
+    </div>
+  )
+}
 
 type Exercise = {
   id: string
@@ -98,6 +204,7 @@ type Workout = {
   id: string
   date: Date
   status: string
+  clientId: string
   client: { name: string }
   trainer: { id: string; name: string } | null
   trainerId: string | null
@@ -244,6 +351,7 @@ export function WorkoutEditor({
           key={set.id}
           set={set}
           workoutId={workout.id}
+          clientId={workout.clientId}
           exercises={exercises}
           disabled={isCompleted}
           canEdit={canEdit}
@@ -268,6 +376,7 @@ export function WorkoutEditor({
 function SetCard({
   set,
   workoutId,
+  clientId,
   exercises,
   disabled,
   canEdit,
@@ -275,6 +384,7 @@ function SetCard({
 }: {
   set: WorkoutSet
   workoutId: string
+  clientId: string
   exercises: Exercise[]
   disabled: boolean
   canEdit: boolean
@@ -323,6 +433,7 @@ function SetCard({
             key={order}
             rounds={rounds}
             workoutId={workoutId}
+            clientId={clientId}
             disabled={disabled}
             canEdit={canEdit}
             canLog={canLog}
@@ -332,6 +443,7 @@ function SetCard({
           <AddExerciseDialog
             setId={set.id}
             workoutId={workoutId}
+            clientId={clientId}
             exercises={exercises}
           />
         )}
@@ -343,18 +455,22 @@ function SetCard({
 function ExerciseGroup({
   rounds,
   workoutId,
+  clientId,
   disabled,
   canEdit,
   canLog,
 }: {
   rounds: SetExercise[]
   workoutId: string
+  clientId: string
   disabled: boolean
   canEdit: boolean
   canLog: boolean
 }) {
   const first = rounds[0]
   const [editOpen, setEditOpen] = useState(false)
+  const [liveReps, setLiveReps] = useState<number | null>(first.targetReps)
+  const [liveWeight, setLiveWeight] = useState<number | null>(first.targetWeight)
 
   async function handleEditSubmit(formData: FormData) {
     await updateAllRoundsTargets(
@@ -395,6 +511,13 @@ function ExerciseGroup({
                   <DialogTitle>Edit {first.exercise.name}</DialogTitle>
                 </DialogHeader>
                 <form action={handleEditSubmit} className="space-y-4">
+                  <PersonalBestHint
+                    clientId={clientId}
+                    exerciseId={first.exercise.id}
+                    enabled={editOpen}
+                    liveReps={liveReps}
+                    liveWeight={liveWeight}
+                  />
                   <div className="space-y-2">
                     <Label htmlFor="modifier">Modifier</Label>
                     <Input
@@ -413,6 +536,11 @@ function ExerciseGroup({
                         type="number"
                         min={0}
                         defaultValue={first.targetReps || ""}
+                        onChange={(e) =>
+                          setLiveReps(
+                            e.target.value === "" ? null : Number(e.target.value)
+                          )
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -424,6 +552,11 @@ function ExerciseGroup({
                         min={0}
                         step="any"
                         defaultValue={first.targetWeight || ""}
+                        onChange={(e) =>
+                          setLiveWeight(
+                            e.target.value === "" ? null : Number(e.target.value)
+                          )
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -471,6 +604,14 @@ function ExerciseGroup({
           </div>
         )}
       </div>
+      {canLog && (
+        <PersonalBestHint
+          clientId={clientId}
+          exerciseId={first.exercise.id}
+          enabled
+          hideWhenEmpty
+        />
+      )}
       <div className="grid gap-2">
         {rounds.map((round) => (
           <RoundRow
@@ -521,6 +662,7 @@ function RoundRow({
     round.actualWeight?.toString() || round.targetWeight?.toString() || ""
   )
   const [notes, setNotes] = useState(round.notes || "")
+  const [pbHits, setPbHits] = useState<PbHit[]>([])
 
   const handleUpdate = async (completed: boolean) => {
     const formData = new FormData()
@@ -528,7 +670,18 @@ function RoundRow({
     formData.set("actualWeight", actualWeight)
     formData.set("notes", notes)
     formData.set("completed", completed.toString())
-    await updateExercise(round.id, workoutId, formData)
+    const result = await updateExercise(round.id, workoutId, formData)
+
+    const hits: PbHit[] =
+      result && "pbs" in result ? result.pbs ?? [] : []
+    if (completed && hits.length > 0) {
+      setPbHits(hits)
+      toast.success(`New personal best — ${round.exercise.name}! 🎉`, {
+        description: hits.map(pbHitText).join(" · "),
+      })
+    } else if (!completed) {
+      setPbHits([])
+    }
   }
 
   return (
@@ -536,6 +689,15 @@ function RoundRow({
       <span className="text-sm text-muted-foreground w-16">
         Round {round.round}
       </span>
+      {pbHits.length > 0 && (
+        <span
+          title={pbHits.map(pbHitText).join("\n")}
+          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 animate-in zoom-in-95"
+        >
+          <Trophy className="h-3 w-3" />
+          PB
+        </span>
+      )}
       {!disabled && canLog && (
         <>
           <Input
@@ -597,10 +759,12 @@ function RoundRow({
 function AddExerciseDialog({
     setId,
     workoutId,
+    clientId,
     exercises,
   }: {
     setId: string
     workoutId: string
+    clientId: string
     exercises: Exercise[]
   }) {
     const [open, setOpen] = useState(false)
@@ -608,6 +772,8 @@ function AddExerciseDialog({
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
     const [showResults, setShowResults] = useState(false)
     const [showNewExerciseForm, setShowNewExerciseForm] = useState(false)
+    const [liveReps, setLiveReps] = useState<number | null>(null)
+    const [liveWeight, setLiveWeight] = useState<number | null>(null)
   
     const filteredExercises = exercises.filter((e) =>
       e.name.toLowerCase().includes(search.toLowerCase())
@@ -785,6 +951,13 @@ function AddExerciseDialog({
                   </p>
                 )}
               </div>
+              <PersonalBestHint
+                clientId={clientId}
+                exerciseId={selectedExercise?.id ?? null}
+                enabled={open}
+                liveReps={liveReps}
+                liveWeight={liveWeight}
+              />
               <div className="space-y-2">
                 <Label htmlFor="modifier">Modifier (optional)</Label>
                 <Input
@@ -807,11 +980,32 @@ function AddExerciseDialog({
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-2">
                   <Label htmlFor="targetReps">Target Reps</Label>
-                  <Input id="targetReps" name="targetReps" type="number" min={0} />
+                  <Input
+                    id="targetReps"
+                    name="targetReps"
+                    type="number"
+                    min={0}
+                    onChange={(e) =>
+                      setLiveReps(
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetWeight">Weight (lbs)</Label>
-                  <Input id="targetWeight" name="targetWeight" type="number" min={0} step="any" />
+                  <Input
+                    id="targetWeight"
+                    name="targetWeight"
+                    type="number"
+                    min={0}
+                    step="any"
+                    onChange={(e) =>
+                      setLiveWeight(
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetDuration">Duration (s)</Label>

@@ -3,6 +3,11 @@
 import { getServerSession } from "next-auth"
 import { authOptions, isTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import {
+  estimate1RM,
+  getPersonalBests,
+  type PbMetric,
+} from "@/lib/personal-bests"
 
 export async function getProgressData(
   exerciseId: string,
@@ -159,7 +164,18 @@ export async function getExerciseSetHistory(
     },
   })
 
-  return setExercises.map((ex) => ({
+  // True all-time PBs (ignores the date filter above) so the table stars real
+  // records, not just the best within the visible range. Per-client only.
+  const personalBests = await getPersonalBests(exerciseId, effectiveClientId)
+  const pbByRound = new Map<string, PbMetric[]>()
+  for (const [metric, record] of Object.entries(personalBests)) {
+    if (!record?.setExerciseId) continue
+    const list = pbByRound.get(record.setExerciseId) ?? []
+    list.push(metric as PbMetric)
+    pbByRound.set(record.setExerciseId, list)
+  }
+
+  const rows = setExercises.map((ex) => ({
     id: ex.id,
     date: ex.workoutSet.workoutSession.date.toISOString().split("T")[0],
     clientName: ex.workoutSet.workoutSession.client.name,
@@ -171,7 +187,14 @@ export async function getExerciseSetHistory(
     actualReps: ex.actualReps,
     actualWeight: ex.actualWeight,
     actualDuration: ex.actualDuration,
+    est1RM:
+      ex.actualWeight !== null && ex.actualReps !== null && ex.actualReps > 0
+        ? estimate1RM(ex.actualWeight, ex.actualReps)
+        : null,
+    pbMetrics: pbByRound.get(ex.id) ?? [],
   }))
+
+  return { rows, personalBests }
 }
 
 export async function getExercisesWithHistory() {
