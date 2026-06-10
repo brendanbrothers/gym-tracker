@@ -104,6 +104,76 @@ export async function getProgressData(
   )
 }
 
+export async function getExerciseSetHistory(
+  exerciseId: string,
+  clientId?: string,
+  startDate?: string,
+  endDate?: string
+) {
+  const session = await getServerSession(authOptions)
+  const userIsTrainer = isTrainer(session?.user.role)
+
+  // For non-trainers, always filter by their own clientId
+  const effectiveClientId = userIsTrainer ? clientId : session?.user.id
+
+  // Build date filter
+  const dateFilter: { gte?: Date; lte?: Date } = {}
+  if (startDate) {
+    dateFilter.gte = new Date(startDate)
+  }
+  if (endDate) {
+    dateFilter.lte = new Date(endDate + "T23:59:59")
+  } else if (startDate) {
+    // If only start date specified, go to today
+    dateFilter.lte = new Date()
+  }
+
+  const setExercises = await prisma.setExercise.findMany({
+    where: {
+      exerciseId,
+      completed: true,
+      workoutSet: {
+        workoutSession: {
+          ...(effectiveClientId ? { clientId: effectiveClientId } : {}),
+          ...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {}),
+        },
+      },
+    },
+    include: {
+      workoutSet: {
+        include: {
+          workoutSession: {
+            include: {
+              client: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      workoutSet: {
+        workoutSession: {
+          date: "desc",
+        },
+      },
+    },
+  })
+
+  return setExercises.map((ex) => ({
+    id: ex.id,
+    date: ex.workoutSet.workoutSession.date.toISOString().split("T")[0],
+    clientName: ex.workoutSet.workoutSession.client.name,
+    round: ex.round,
+    order: ex.order,
+    targetReps: ex.targetReps,
+    targetWeight: ex.targetWeight,
+    targetDuration: ex.targetDuration,
+    actualReps: ex.actualReps,
+    actualWeight: ex.actualWeight,
+    actualDuration: ex.actualDuration,
+  }))
+}
+
 export async function getExercisesWithHistory() {
   const session = await getServerSession(authOptions)
   const userIsTrainer = isTrainer(session?.user.role)

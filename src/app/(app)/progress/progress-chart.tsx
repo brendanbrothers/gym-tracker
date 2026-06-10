@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { getProgressData } from "./actions"
+import { getExerciseSetHistory, getProgressData } from "./actions"
+import { SetHistoryRow, SetHistoryTable } from "./set-history-table"
 
 type Exercise = {
   id: string
@@ -56,19 +57,30 @@ export function ProgressChart({
   const [startDate, setStartDate] = useState<string>("")
   const [endDate, setEndDate] = useState<string>("")
   const [data, setData] = useState<ProgressData[]>([])
+  const [setHistory, setSetHistory] = useState<SetHistoryRow[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!selectedExercise) return
 
     setLoading(true)
-    getProgressData(
-      selectedExercise,
-      selectedClient === "all" ? undefined : selectedClient,
-      startDate || undefined,
-      endDate || undefined
-    ).then((result) => {
-      setData(result)
+    const client = selectedClient === "all" ? undefined : selectedClient
+    Promise.all([
+      getProgressData(
+        selectedExercise,
+        client,
+        startDate || undefined,
+        endDate || undefined
+      ),
+      getExerciseSetHistory(
+        selectedExercise,
+        client,
+        startDate || undefined,
+        endDate || undefined
+      ),
+    ]).then(([progress, history]) => {
+      setData(progress)
+      setSetHistory(history)
       setLoading(false)
     })
   }, [selectedExercise, selectedClient, startDate, endDate])
@@ -236,6 +248,8 @@ export function ProgressChart({
               </ResponsiveContainer>
             </div>
           </div>
+
+          <SetHistoryTable rows={setHistory} />
         </div>
       )}
     </div>
