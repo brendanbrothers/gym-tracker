@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Plus, Trash2, Check, Trophy } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -49,6 +49,7 @@ import {
   updateExercise,
   deleteExercise,
   completeWorkout,
+  reopenWorkout,
   updateAllRoundsTargets,
   deleteWorkout,
   createExercise,
@@ -344,6 +345,18 @@ export function WorkoutEditor({
             <span className="px-3 py-2 bg-green-100 text-green-800 rounded-md text-sm font-medium">
               Completed
             </span>
+          )}
+          {isCompleted && canLog && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await reopenWorkout(workout.id)
+                router.refresh()
+              }}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reopen Workout
+            </Button>
           )}
         </div>
         </div>

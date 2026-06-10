@@ -294,6 +294,17 @@ export async function completeWorkout(workoutId: string) {
   revalidatePath(`/workouts/${workoutId}`)
 }
 
+export async function reopenWorkout(workoutId: string) {
+  await requireTrainerOrOwner(workoutId)
+
+  await prisma.workoutSession.update({
+    where: { id: workoutId },
+    data: { status: "IN_PROGRESS" },
+  })
+
+  revalidatePath(`/workouts/${workoutId}`)
+}
+
 export async function updateExerciseTargets(
     exerciseId: string,
     workoutId: string,
