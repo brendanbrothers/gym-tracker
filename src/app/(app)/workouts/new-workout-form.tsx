@@ -147,7 +147,9 @@ export function NewWorkoutForm({
               id="date"
               name="date"
               type="date"
-              defaultValue={new Date().toISOString().split("T")[0]}
+              // Local today (en-CA yields YYYY-MM-DD); a UTC date here can land
+              // on the wrong day near midnight for viewers off UTC.
+              defaultValue={new Date().toLocaleDateString("en-CA")}
             />
           </div>
           <div className="space-y-2">
