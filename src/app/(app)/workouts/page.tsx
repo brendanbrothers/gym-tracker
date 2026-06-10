@@ -71,7 +71,9 @@ export default async function WorkoutsPage() {
               <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                 <TableCell>
                   <Link href={`/workouts/${workout.id}`} className="block">
-                    {workout.date.toLocaleDateString()}
+                    {workout.date.toLocaleDateString(undefined, {
+                      timeZone: "UTC",
+                    })}
                   </Link>
                 </TableCell>
                 <TableCell>

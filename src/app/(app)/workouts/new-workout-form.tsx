@@ -49,7 +49,9 @@ function formatWorkoutSummary(workout: RecentWorkout) {
     })
   })
   const names = Array.from(exerciseNames).join(", ")
-  return `${new Date(workout.date).toLocaleDateString()} — ${names}`
+  return `${new Date(workout.date).toLocaleDateString(undefined, {
+    timeZone: "UTC",
+  })} — ${names}`
 }
 
 export function NewWorkoutForm({

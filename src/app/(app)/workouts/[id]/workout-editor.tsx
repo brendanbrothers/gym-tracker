@@ -243,7 +243,10 @@ export function WorkoutEditor({
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold">
-              {workout.client.name} - {new Date(workout.date).toLocaleDateString("en-US")}
+              {workout.client.name} -{" "}
+              {new Date(workout.date).toLocaleDateString("en-US", {
+                timeZone: "UTC",
+              })}
             </h1>
             <p className="text-muted-foreground">
               {workout.trainer && `Trainer: ${workout.trainer.name}`}

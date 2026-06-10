@@ -29,6 +29,7 @@ export type SetHistoryRow = {
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-US", {
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
     year: "numeric",

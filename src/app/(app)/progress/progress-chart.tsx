@@ -172,6 +172,7 @@ export function ProgressChart({
                     dataKey="date"
                     tickFormatter={(value) =>
                       new Date(value).toLocaleDateString("en-US", {
+                        timeZone: "UTC",
                         month: "short",
                         day: "numeric",
                       })
@@ -181,6 +182,7 @@ export function ProgressChart({
                   <Tooltip
                     labelFormatter={(value) =>
                       new Date(value).toLocaleDateString("en-US", {
+                        timeZone: "UTC",
                         month: "long",
                         day: "numeric",
                         year: "numeric",
@@ -217,6 +219,7 @@ export function ProgressChart({
                     dataKey="date"
                     tickFormatter={(value) =>
                       new Date(value).toLocaleDateString("en-US", {
+                        timeZone: "UTC",
                         month: "short",
                         day: "numeric",
                       })
@@ -226,6 +229,7 @@ export function ProgressChart({
                   <Tooltip
                     labelFormatter={(value) =>
                       new Date(value).toLocaleDateString("en-US", {
+                        timeZone: "UTC",
                         month: "long",
                         day: "numeric",
                         year: "numeric",
