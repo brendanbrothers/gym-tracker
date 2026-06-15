@@ -630,8 +630,12 @@ function ExerciseGroup({
       )}
       <div className="grid gap-2">
         {rounds.map((round) => (
+          // Include targets in the key so the row remounts and re-seeds its
+          // inputs when "Update All Rounds" changes the targets. RoundRow seeds
+          // its actual reps/weight from the target on mount, so a stable key
+          // would keep showing the stale target after a target update.
           <RoundRow
-            key={round.id}
+            key={`${round.id}:${round.targetReps}:${round.targetWeight}:${round.targetDuration}`}
             round={round}
             workoutId={workoutId}
             disabled={disabled}
