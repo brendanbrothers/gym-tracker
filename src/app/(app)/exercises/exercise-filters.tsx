@@ -62,16 +62,22 @@ type FilterOptions = {
   equipment: string[]
 }
 
+const PAGE_SIZE = 20
+
 export function ExerciseFilters({
   initialExercises,
+  initialTotalCount,
   filterOptions,
   isTrainer = false,
 }: {
   initialExercises: Exercise[]
+  initialTotalCount: number
   filterOptions: FilterOptions
   isTrainer?: boolean
 }) {
   const [exercises, setExercises] = useState(initialExercises)
+  const [totalCount, setTotalCount] = useState(initialTotalCount)
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [muscle, setMuscle] = useState("all")
@@ -79,21 +85,35 @@ export function ExerciseFilters({
   const [isPending, startTransition] = useTransition()
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  function refetch(targetPage: number) {
+    startTransition(async () => {
+      const result = await getExercises({
+        search: search || undefined,
+        category: category || undefined,
+        primaryMuscle: muscle || undefined,
+        equipment: equipment || undefined,
+        page: targetPage,
+      })
+      setExercises(result.exercises)
+      setTotalCount(result.totalCount)
+      setPage(result.page)
+    })
+  }
+
+  // Reset to the first page whenever a filter changes.
+  function updateFilter<T>(setter: (value: T) => void, value: T) {
+    setter(value)
+    setPage(1)
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      startTransition(async () => {
-        const results = await getExercises({
-          search: search || undefined,
-          category: category || undefined,
-          primaryMuscle: muscle || undefined,
-          equipment: equipment || undefined,
-        })
-        setExercises(results)
-      })
+      refetch(page)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [search, category, muscle, equipment])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category, muscle, equipment, page])
 
   async function handleDelete(exerciseId: string) {
     setDeleteError(null)
@@ -101,9 +121,13 @@ export function ExerciseFilters({
     if (result.error) {
       setDeleteError(result.error)
     } else {
-      setExercises(exercises.filter((e) => e.id !== exerciseId))
+      refetch(page)
     }
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const firstRow = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const lastRow = (page - 1) * PAGE_SIZE + exercises.length
 
   return (
     <div className="space-y-4">
@@ -112,9 +136,12 @@ export function ExerciseFilters({
           <Input
             placeholder="Search exercises..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => updateFilter(setSearch, e.target.value)}
           />
-          <Select value={category} onValueChange={setCategory}>
+          <Select
+            value={category}
+            onValueChange={(value) => updateFilter(setCategory, value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -127,7 +154,10 @@ export function ExerciseFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={muscle} onValueChange={setMuscle}>
+          <Select
+            value={muscle}
+            onValueChange={(value) => updateFilter(setMuscle, value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Muscle" />
             </SelectTrigger>
@@ -140,7 +170,10 @@ export function ExerciseFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={equipment} onValueChange={setEquipment}>
+          <Select
+            value={equipment}
+            onValueChange={(value) => updateFilter(setEquipment, value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Equipment" />
             </SelectTrigger>
@@ -160,6 +193,7 @@ export function ExerciseFilters({
               setCategory("all")
               setMuscle("all")
               setEquipment("all")
+              setPage(1)
             }}
           >
             Clear Filters
@@ -170,21 +204,14 @@ export function ExerciseFilters({
             onSubmit={createExercise}
             onSuccess={() => {
               // Re-fetch the exercises
-              startTransition(async () => {
-                const results = await getExercises({
-                  search: search || undefined,
-                  category: category || undefined,
-                  primaryMuscle: muscle || undefined,
-                  equipment: equipment || undefined,
-                })
-                setExercises(results)
-              })
+              refetch(page)
             }}
           />
         )}
       </div>
       <p className="text-sm text-muted-foreground">
-        Showing {exercises.length} exercises {isPending && "(loading...)"}
+        Showing {firstRow}–{lastRow} of {totalCount} exercises{" "}
+        {isPending && "(loading...)"}
       </p>
       {deleteError && (
         <p className="text-sm text-red-500">{deleteError}</p>
@@ -214,6 +241,31 @@ export function ExerciseFilters({
           ))}
         </TableBody>
       </Table>
+      {totalCount > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isPending}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isPending}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

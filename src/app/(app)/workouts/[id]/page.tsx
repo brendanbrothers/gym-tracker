@@ -67,7 +67,6 @@ export default async function WorkoutPage({
   const exercises = await prisma.exercise.findMany({
     where: { isActive: true },
     orderBy: { name: "asc" },
-    take: 100,
   })
 
   const trainers = await prisma.user.findMany({
