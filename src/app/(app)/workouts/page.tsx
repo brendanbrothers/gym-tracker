@@ -13,14 +13,27 @@ import {
 } from "@/components/ui/table"
 import { NewWorkoutForm } from "./new-workout-form"
 import { StatusBadge } from "@/components/status-badge"
+import { Button } from "@/components/ui/button"
 
-export default async function WorkoutsPage() {
+const PAGE_SIZE = 20
+
+export default async function WorkoutsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
   const session = await getServerSession(authOptions)
-  
+
   const isTrainer = checkTrainer(session?.user.role)
+  const where = isTrainer ? {} : { clientId: session?.user.id }
+
+  const totalCount = await prisma.workoutSession.count({ where })
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const requestedPage = Number((await searchParams).page) || 1
+  const page = Math.min(Math.max(1, requestedPage), totalPages)
 
   const workouts = await prisma.workoutSession.findMany({
-    where: isTrainer ? {} : { clientId: session?.user.id },
+    where,
     include: {
       client: true,
       trainer: true,
@@ -34,8 +47,12 @@ export default async function WorkoutsPage() {
       },
     },
     orderBy: { date: "desc" },
-    take: 20,
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   })
+
+  const firstRow = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const lastRow = (page - 1) * PAGE_SIZE + workouts.length
 
   const clients = await prisma.user.findMany({
     where: { role: "CLIENT" },
@@ -104,6 +121,39 @@ export default async function WorkoutsPage() {
             ))}
           </TableBody>
         </Table>
+      )}
+      {totalCount > PAGE_SIZE && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {firstRow}–{lastRow} of {totalCount}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              asChild={page > 1}
+            >
+              {page > 1 ? (
+                <Link href={`/workouts?page=${page - 1}`}>Previous</Link>
+              ) : (
+                <span>Previous</span>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              asChild={page < totalPages}
+            >
+              {page < totalPages ? (
+                <Link href={`/workouts?page=${page + 1}`}>Next</Link>
+              ) : (
+                <span>Next</span>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   )
