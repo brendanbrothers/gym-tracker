@@ -13,35 +13,43 @@ const exerciseSchema = z.object({
   equipment: z.string().optional().nullable(),
 })
 
+const EXERCISES_PAGE_SIZE = 20
+
 export async function getExercises(params: {
   search?: string
   category?: string
   primaryMuscle?: string
   equipment?: string
+  page?: number
 }) {
-  const { search, category, primaryMuscle, equipment } = params
+  const { search, category, primaryMuscle, equipment, page = 1 } = params
+
+  const where = {
+    AND: [
+      search ? { name: { contains: search, mode: "insensitive" as const } } : {},
+      category && category !== "all" ? { category } : {},
+      primaryMuscle && primaryMuscle !== "all" ? { primaryMuscle } : {},
+      equipment && equipment !== "all" ? { equipment } : {},
+    ],
+  }
+
+  const totalCount = await prisma.exercise.count({ where })
+  const totalPages = Math.max(1, Math.ceil(totalCount / EXERCISES_PAGE_SIZE))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
 
   const exercises = await prisma.exercise.findMany({
-    where: {
-      AND: [
-        search
-          ? { name: { contains: search } }
-          : {},
-        category && category !== "all" ? { category } : {},
-        primaryMuscle && primaryMuscle !== "all" ? { primaryMuscle } : {},
-        equipment && equipment !== "all" ? { equipment } : {},
-      ],
-    },
+    where,
     include: {
       createdBy: {
         select: { id: true, name: true },
       },
     },
     orderBy: { name: "asc" },
-    take: 50,
+    skip: (currentPage - 1) * EXERCISES_PAGE_SIZE,
+    take: EXERCISES_PAGE_SIZE,
   })
 
-  return exercises
+  return { exercises, totalCount, page: currentPage, pageSize: EXERCISES_PAGE_SIZE }
 }
 
 export async function getFilterOptions() {
@@ -95,7 +103,7 @@ export async function createExercise(formData: FormData) {
 
   // Check for duplicate name
   const existing = await prisma.exercise.findFirst({
-    where: { name: { equals: name } },
+    where: { name: { equals: name, mode: "insensitive" } },
   })
 
   if (existing) {
@@ -145,7 +153,7 @@ export async function updateExercise(exerciseId: string, formData: FormData) {
   // Check for duplicate name (excluding current exercise)
   const existing = await prisma.exercise.findFirst({
     where: {
-      name: { equals: name },
+      name: { equals: name, mode: "insensitive" },
       id: { not: exerciseId },
     },
   })
