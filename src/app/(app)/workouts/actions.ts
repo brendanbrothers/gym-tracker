@@ -25,9 +25,9 @@ export async function createWorkout(formData: FormData) {
     return { error: "Client is required" }
   }
 
-  // Store the calendar date as UTC midnight so it renders the same regardless of
-  // the server's or viewer's timezone (display formats it in UTC to match).
-  const date = dateStr ? new Date(dateStr + "T00:00:00.000Z") : new Date()
+  // The client sends a full UTC ISO instant (converted from the trainer's local
+  // date/time), so store it as-is. Fall back to now if missing.
+  const date = dateStr ? new Date(dateStr) : new Date()
 
   const workout = await prisma.workoutSession.create({
     data: {

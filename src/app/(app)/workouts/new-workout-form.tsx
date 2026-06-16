@@ -20,6 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  dateAndTimeToISO,
+  formatWorkoutDateTime,
+  quarterHourOptions,
+  roundToQuarterHour,
+  toDateValue,
+  toTimeValue,
+} from "@/lib/utils"
+
+const TIME_OPTIONS = quarterHourOptions()
 
 import { createWorkout, getRecentWorkoutsForClient } from "./actions"
 
@@ -49,9 +59,7 @@ function formatWorkoutSummary(workout: RecentWorkout) {
     })
   })
   const names = Array.from(exerciseNames).join(", ")
-  return `${new Date(workout.date).toLocaleDateString(undefined, {
-    timeZone: "UTC",
-  })} — ${names}`
+  return `${formatWorkoutDateTime(workout.date)} — ${names}`
 }
 
 export function NewWorkoutForm({
@@ -86,6 +94,14 @@ export function NewWorkoutForm({
   async function handleSubmit(formData: FormData) {
     setError("")
     setLoading(true)
+
+    // Combine date + time into a UTC instant before sending, so the stored time
+    // reflects the trainer's timezone, not the server's.
+    const localDate = formData.get("date") as string
+    const localTime = (formData.get("time") as string) || "12:00"
+    if (localDate) {
+      formData.set("date", dateAndTimeToISO(localDate, localTime))
+    }
 
     const result = await createWorkout(formData)
 
@@ -141,16 +157,34 @@ export function NewWorkoutForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              // Local today (en-CA yields YYYY-MM-DD); a UTC date here can land
-              // on the wrong day near midnight for viewers off UTC.
-              defaultValue={new Date().toLocaleDateString("en-CA")}
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                defaultValue={toDateValue(new Date())}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">Time</Label>
+              <Select
+                name="time"
+                defaultValue={toTimeValue(roundToQuarterHour(new Date()))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60">
+                  {TIME_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>

@@ -63,6 +63,16 @@ import {
     PRIMARY_MUSCLES,
     EQUIPMENT,
   } from "@/lib/constants"
+import {
+  dateAndTimeToISO,
+  formatWorkoutDateTime,
+  quarterHourOptions,
+  roundToQuarterHour,
+  toDateValue,
+  toTimeValue,
+} from "@/lib/utils"
+
+const TIME_OPTIONS = quarterHourOptions()
 
 // Client-side PB presentation. The label/format logic is duplicated here rather
 // than imported from @/lib/personal-bests, which pulls in Prisma (server-only).
@@ -234,6 +244,12 @@ export function WorkoutEditor({
   const canLog = isTrainer || isOwner // Can log results
 
   async function handleEditSubmit(formData: FormData) {
+    // Combine date + time into a UTC instant before sending.
+    const localDate = formData.get("date") as string
+    const localTime = (formData.get("time") as string) || "12:00"
+    if (localDate) {
+      formData.set("date", dateAndTimeToISO(localDate, localTime))
+    }
     await updateWorkoutDetails(workout.id, formData)
     setEditOpen(false)
   }
@@ -245,9 +261,7 @@ export function WorkoutEditor({
           <div>
             <h1 className="text-2xl font-bold">
               {workout.client.name} -{" "}
-              {new Date(workout.date).toLocaleDateString("en-US", {
-                timeZone: "UTC",
-              })}
+              {formatWorkoutDateTime(workout.date)}
             </h1>
             <p className="text-muted-foreground">
               {workout.trainer && `Trainer: ${workout.trainer.name}`}
@@ -268,15 +282,37 @@ export function WorkoutEditor({
                     <DialogTitle>Edit Workout Details</DialogTitle>
                   </DialogHeader>
                   <form action={handleEditSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="date">Date</Label>
-                      <Input
-                        id="date"
-                        name="date"
-                        type="date"
-                        defaultValue={new Date(workout.date).toISOString().split("T")[0]}
-                        required
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Input
+                          id="date"
+                          name="date"
+                          type="date"
+                          defaultValue={toDateValue(new Date(workout.date))}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="time">Time</Label>
+                        <Select
+                          name="time"
+                          defaultValue={toTimeValue(
+                            roundToQuarterHour(new Date(workout.date))
+                          )}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent position="popper" className="max-h-60">
+                            {TIME_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="trainerId">Trainer</Label>

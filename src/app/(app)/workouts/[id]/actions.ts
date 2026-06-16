@@ -410,7 +410,8 @@ export async function updateExerciseTargets(
     await prisma.workoutSession.update({
       where: { id: workoutId },
       data: {
-        date: new Date(date + "T00:00:00.000Z"),
+        // Client sends a full UTC ISO instant converted from local date/time.
+        date: new Date(date),
         trainerId: trainerId && trainerId !== "none" ? trainerId : null,
       },
     })

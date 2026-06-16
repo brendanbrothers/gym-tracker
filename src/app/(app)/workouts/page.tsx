@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth"
 import Link from "next/link"
 import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { formatWorkoutDateTime } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -71,9 +72,7 @@ export default async function WorkoutsPage() {
               <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                 <TableCell>
                   <Link href={`/workouts/${workout.id}`} className="block">
-                    {workout.date.toLocaleDateString(undefined, {
-                      timeZone: "UTC",
-                    })}
+                    {formatWorkoutDateTime(workout.date)}
                   </Link>
                 </TableCell>
                 <TableCell>
