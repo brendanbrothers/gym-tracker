@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ClipboardList, Calendar } from "lucide-react"
+import { ClipboardList, Calendar, Ban } from "lucide-react"
 import { StatusBadge } from "@/components/status-badge"
 import { prisma } from "@/lib/db"
 import {
@@ -27,11 +27,11 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Upcoming workouts (IN_PROGRESS, date >= today)
+  // Upcoming workouts (scheduled or in progress, date >= today)
   const upcomingWorkouts = await prisma.workoutSession.findMany({
     where: {
       clientId: userId,
-      status: "IN_PROGRESS",
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
       date: { gte: today },
     },
     include: {
@@ -46,14 +46,33 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
     take: 10,
   })
 
-  // Past workouts (COMPLETED or date < today)
+  // Past workouts (completed, or past-due and not cancelled)
   const pastWorkouts = await prisma.workoutSession.findMany({
     where: {
       clientId: userId,
+      status: { not: "CANCELLED" },
       OR: [
         { status: "COMPLETED" },
         { date: { lt: today } },
       ],
+    },
+    include: {
+      trainer: true,
+      sets: {
+        include: {
+          exercises: true,
+        },
+      },
+    },
+    orderBy: { date: "desc" },
+    take: 10,
+  })
+
+  // Cancelled workouts, so clients can keep track of them
+  const cancelledWorkouts = await prisma.workoutSession.findMany({
+    where: {
+      clientId: userId,
+      status: "CANCELLED",
     },
     include: {
       trainer: true,
@@ -212,6 +231,65 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancelled Workouts */}
+      {cancelledWorkouts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5" />
+              Cancelled Workouts
+            </CardTitle>
+            <CardDescription>
+              {`${cancelledWorkouts.length} cancelled workout${cancelledWorkouts.length > 1 ? "s" : ""}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Trainer</TableHead>
+                  <TableHead>Exercises</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cancelledWorkouts.map((workout) => (
+                  <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell>
+                      <Link href={`/workouts/${workout.id}`} className="block font-medium">
+                        {workout.date.toLocaleString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/workouts/${workout.id}`} className="block">
+                        {workout.trainer?.name || "-"}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/workouts/${workout.id}`} className="block">
+                        {workout.sets.reduce((acc, set) => acc + set.exercises.length, 0)}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/workouts/${workout.id}`} className="block">
+                        <StatusBadge status={workout.status} />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

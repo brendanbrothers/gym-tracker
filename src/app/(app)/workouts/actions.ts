@@ -34,7 +34,7 @@ export async function createWorkout(formData: FormData) {
       date,
       clientId,
       trainerId: trainerId || null,
-      status: "IN_PROGRESS",
+      status: "SCHEDULED",
     },
   })
 

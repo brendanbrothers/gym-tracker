@@ -36,6 +36,7 @@ export type ExerciseSource = (typeof ExerciseSource)[keyof typeof ExerciseSource
 
 
 export const SessionStatus = {
+  SCHEDULED: 'SCHEDULED',
   IN_PROGRESS: 'IN_PROGRESS',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED'

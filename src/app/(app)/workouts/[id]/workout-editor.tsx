@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw, Play, Ban } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -48,6 +48,9 @@ import {
   addExerciseToSet,
   updateExercise,
   deleteExercise,
+  startWorkout,
+  cancelWorkout,
+  restoreWorkout,
   completeWorkout,
   reopenWorkout,
   updateAllRoundsTargets,
@@ -236,7 +239,12 @@ export function WorkoutEditor({
   isOwner?: boolean
 }) {
   const router = useRouter()
+  const isScheduled = workout.status === "SCHEDULED"
+  const isInProgress = workout.status === "IN_PROGRESS"
   const isCompleted = workout.status === "COMPLETED"
+  const isCancelled = workout.status === "CANCELLED"
+  // Completed and cancelled sessions are read-only (no logging or editing).
+  const isLocked = isCompleted || isCancelled
   const [editOpen, setEditOpen] = useState(false)
 
   // Permission flags
@@ -365,7 +373,49 @@ export function WorkoutEditor({
               </AlertDialog>
             </>
           )}
-          {!isCompleted && canLog && (
+          {isScheduled && canLog && (
+            <>
+              <Button
+                variant="default"
+                onClick={async () => {
+                  await startWorkout(workout.id)
+                  router.refresh()
+                }}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Start Workout
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline">
+                    <Ban className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel this workout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      It will be marked cancelled and moved out of the active
+                      list. You can restore it to scheduled later if needed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        await cancelWorkout(workout.id)
+                        router.refresh()
+                      }}
+                    >
+                      Cancel Workout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+          {isInProgress && canLog && (
             <Button
               variant="default"
               onClick={async () => {
@@ -394,6 +444,23 @@ export function WorkoutEditor({
               Reopen Workout
             </Button>
           )}
+          {isCancelled && (
+            <span className="px-3 py-2 bg-gray-200 text-gray-600 rounded-md text-sm font-medium">
+              Cancelled
+            </span>
+          )}
+          {isCancelled && canLog && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await restoreWorkout(workout.id)
+                router.refresh()
+              }}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reschedule
+            </Button>
+          )}
         </div>
         </div>
       </div>
@@ -405,13 +472,13 @@ export function WorkoutEditor({
           workoutId={workout.id}
           clientId={workout.clientId}
           exercises={exercises}
-          disabled={isCompleted}
+          disabled={isLocked}
           canEdit={canEdit}
           canLog={canLog}
         />
       ))}
 
-      {!isCompleted && canEdit && (
+      {!isLocked && canEdit && (
         <Button
           variant="outline"
           onClick={() => addSet(workout.id)}

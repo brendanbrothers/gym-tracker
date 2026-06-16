@@ -63,3 +63,11 @@ export function formatWorkoutDateTime(date: Date | string) {
     timeStyle: "short",
   })
 }
+
+/** Format a workout's stored instant as a local time of day, e.g. "9:30 AM". */
+export function formatWorkoutTime(date: Date | string) {
+  return new Date(date).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}

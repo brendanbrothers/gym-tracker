@@ -120,7 +120,7 @@ model WorkoutSession {
   id        String        @id @default(cuid())
   date      DateTime
   notes     String?
-  status    SessionStatus @default(IN_PROGRESS)
+  status    SessionStatus @default(SCHEDULED)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -142,6 +142,7 @@ model WorkoutSession {
 }
 
 enum SessionStatus {
+  SCHEDULED
   IN_PROGRESS
   COMPLETED
   CANCELLED

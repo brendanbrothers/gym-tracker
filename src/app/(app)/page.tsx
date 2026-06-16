@@ -22,6 +22,69 @@ import {
 import { HomeActions } from "./home-actions"
 import { ClientHome } from "./client-home"
 import { StatusBadge } from "@/components/status-badge"
+import { formatWorkoutTime } from "@/lib/utils"
+
+type WorkoutRow = {
+  id: string
+  date: Date
+  status: string
+  client: { name: string }
+  trainer: { name: string } | null
+  sets: { exercises: unknown[] }[]
+}
+
+function TodaysWorkoutsTable({ workouts }: { workouts: WorkoutRow[] }) {
+  return (
+    <Table className="table-fixed">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-28">Time</TableHead>
+          <TableHead>Client</TableHead>
+          <TableHead>Trainer</TableHead>
+          <TableHead className="w-20">Sets</TableHead>
+          <TableHead className="w-24">Exercises</TableHead>
+          <TableHead className="w-32">Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {workouts.map((workout) => (
+          <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block font-medium">
+                {formatWorkoutTime(workout.date)}
+              </Link>
+            </TableCell>
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block">
+                {workout.client.name}
+              </Link>
+            </TableCell>
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block">
+                {workout.trainer?.name || "-"}
+              </Link>
+            </TableCell>
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block">
+                {workout.sets.length}
+              </Link>
+            </TableCell>
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block">
+                {workout.sets.reduce((acc, set) => acc + set.exercises.length, 0)}
+              </Link>
+            </TableCell>
+            <TableCell>
+              <Link href={`/workouts/${workout.id}`} className="block">
+                <StatusBadge status={workout.status} />
+              </Link>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
@@ -66,8 +129,17 @@ export default async function Home() {
         },
       },
     },
-    orderBy: { date: "desc" },
+    orderBy: { date: "asc" },
   })
+
+  // Scheduled + in-progress share the tile; sorted by time, the active ones
+  // naturally surface near the top of the day's agenda.
+  const activeWorkouts = todaysWorkouts.filter(
+    (w) => w.status === "SCHEDULED" || w.status === "IN_PROGRESS"
+  )
+  const completedWorkouts = todaysWorkouts.filter(
+    (w) => w.status === "COMPLETED"
+  )
 
   // Get data needed for forms
   const clients = await prisma.user.findMany({
@@ -99,7 +171,7 @@ export default async function Home() {
         <HomeActions clients={clients} trainers={trainers} isTrainer={isTrainer} />
       </div>
 
-      {/* Today's Workouts */}
+      {/* Today's Workouts (in progress) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -107,58 +179,41 @@ export default async function Home() {
             Today&apos;s Workouts
           </CardTitle>
           <CardDescription>
-            {todaysWorkouts.length === 0
+            {activeWorkouts.length === 0
               ? "No workouts scheduled for today"
-              : `${todaysWorkouts.length} workout${todaysWorkouts.length > 1 ? "s" : ""} today`}
+              : `${activeWorkouts.length} workout${activeWorkouts.length > 1 ? "s" : ""} scheduled or in progress`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {todaysWorkouts.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Trainer</TableHead>
-                  <TableHead>Sets</TableHead>
-                  <TableHead>Exercises</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {todaysWorkouts.map((workout) => (
-                  <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell>
-                      <Link href={`/workouts/${workout.id}`} className="block font-medium">
-                        {workout.client.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/workouts/${workout.id}`} className="block">
-                        {workout.trainer?.name || "-"}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/workouts/${workout.id}`} className="block">
-                        {workout.sets.length}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/workouts/${workout.id}`} className="block">
-                        {workout.sets.reduce((acc, set) => acc + set.exercises.length, 0)}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/workouts/${workout.id}`} className="block">
-                        <StatusBadge status={workout.status} />
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          {activeWorkouts.length > 0 ? (
+            <TodaysWorkoutsTable workouts={activeWorkouts} />
           ) : (
             <p className="text-muted-foreground text-center py-8">
               No workouts scheduled for today. Create one to get started!
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Completed Today */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" />
+            Completed Today
+          </CardTitle>
+          <CardDescription>
+            {completedWorkouts.length === 0
+              ? "No completed workouts today"
+              : `${completedWorkouts.length} workout${completedWorkouts.length > 1 ? "s" : ""} completed`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {completedWorkouts.length > 0 ? (
+            <TodaysWorkoutsTable workouts={completedWorkouts} />
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              No workouts completed yet today.
             </p>
           )}
         </CardContent>

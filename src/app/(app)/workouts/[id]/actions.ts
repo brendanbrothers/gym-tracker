@@ -217,6 +217,16 @@ export async function updateExercise(
     data: parsed.data,
   })
 
+  // Logging a result means the session is underway: auto-advance it from
+  // SCHEDULED to IN_PROGRESS. Scoped to SCHEDULED so it never disturbs a
+  // completed/cancelled session, and it never reverts on un-complete.
+  if (parsed.data.completed) {
+    await prisma.workoutSession.updateMany({
+      where: { id: workoutId, status: "SCHEDULED" },
+      data: { status: "IN_PROGRESS" },
+    })
+  }
+
   // When a round is completed, check whether it beat the client's prior bests so
   // the UI can celebrate it in the moment.
   let pbs: PbHit[] = []
@@ -270,6 +280,40 @@ export async function deleteExercise(exerciseId: string, workoutId: string) {
 
   await prisma.setExercise.delete({
     where: { id: exerciseId },
+  })
+
+  revalidatePath(`/workouts/${workoutId}`)
+}
+
+export async function startWorkout(workoutId: string) {
+  await requireTrainerOrOwner(workoutId)
+
+  await prisma.workoutSession.update({
+    where: { id: workoutId },
+    data: { status: "IN_PROGRESS" },
+  })
+
+  revalidatePath(`/workouts/${workoutId}`)
+}
+
+export async function cancelWorkout(workoutId: string) {
+  await requireTrainerOrOwner(workoutId)
+
+  await prisma.workoutSession.update({
+    where: { id: workoutId },
+    data: { status: "CANCELLED" },
+  })
+
+  revalidatePath(`/workouts/${workoutId}`)
+}
+
+// Restore a cancelled session back to SCHEDULED (it never started).
+export async function restoreWorkout(workoutId: string) {
+  await requireTrainerOrOwner(workoutId)
+
+  await prisma.workoutSession.update({
+    where: { id: workoutId },
+    data: { status: "SCHEDULED" },
   })
 
   revalidatePath(`/workouts/${workoutId}`)
