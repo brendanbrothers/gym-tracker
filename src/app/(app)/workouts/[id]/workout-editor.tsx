@@ -355,7 +355,7 @@ export function WorkoutEditor({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete this workout?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete this workout and all its sets and exercises. This action cannot be undone.
+                      This will permanently delete this workout and all its circuits and exercises. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -485,7 +485,7 @@ export function WorkoutEditor({
           className="w-full"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Set
+          Add Circuit
         </Button>
       )}
     </div>
@@ -521,19 +521,19 @@ function SetCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg">Set {set.order}</CardTitle>
+        <CardTitle className="text-lg">Circuit {set.order}</CardTitle>
         {!disabled && canEdit && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" title="Delete Set">
+              <Button variant="ghost" size="sm" title="Delete Circuit">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Set {set.order}?</AlertDialogTitle>
+                <AlertDialogTitle>Delete Circuit {set.order}?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will delete all exercises in this set. This action cannot be undone.
+                  This will delete all exercises in this circuit. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -1136,7 +1136,7 @@ function AddExerciseDialog({
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={!selectedExercise}>
-                Add to Set
+                Add to Circuit
               </Button>
             </form>
           )}

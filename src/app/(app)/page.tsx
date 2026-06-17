@@ -41,7 +41,7 @@ function TodaysWorkoutsTable({ workouts }: { workouts: WorkoutRow[] }) {
           <TableHead className="w-28">Time</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Trainer</TableHead>
-          <TableHead className="w-20">Sets</TableHead>
+          <TableHead className="w-20">Circuits</TableHead>
           <TableHead className="w-24">Exercises</TableHead>
           <TableHead className="w-32">Status</TableHead>
         </TableRow>

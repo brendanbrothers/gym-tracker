@@ -79,7 +79,7 @@ export default async function WorkoutsPage({
               <TableHead>Date</TableHead>
               <TableHead>Client</TableHead>
               <TableHead>Trainer</TableHead>
-              <TableHead>Sets</TableHead>
+              <TableHead>Circuits</TableHead>
               <TableHead>Exercises</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
