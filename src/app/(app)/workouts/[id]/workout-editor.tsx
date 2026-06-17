@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw, Play, Ban, User } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, CheckCheck, Trophy, RotateCcw, Play, Ban, User } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -213,6 +213,13 @@ type WorkoutSet = {
   id: string
   order: number
   exercises: SetExercise[]
+}
+
+// Imperative handle a RoundRow exposes so the exercise-level "complete all"
+// button can run each round's own save — sending that row's current inputs and
+// firing its PB toast/trophy, exactly as clicking its check would.
+type RoundHandle = {
+  complete: (completed: boolean) => Promise<void>
 }
 
 type Workout = {
@@ -600,6 +607,23 @@ function ExerciseGroup({
   const [editOpen, setEditOpen] = useState(false)
   const [liveReps, setLiveReps] = useState<number | null>(first.targetReps)
   const [liveWeight, setLiveWeight] = useState<number | null>(first.targetWeight)
+  const [completingAll, setCompletingAll] = useState(false)
+  const roundHandles = useRef(new Map<string, RoundHandle>())
+  const allCompleted = rounds.every((r) => r.completed)
+
+  async function handleCompleteAll() {
+    const completed = !allCompleted
+    setCompletingAll(true)
+    try {
+      // Drive each round's own save in order — same effect as clicking every
+      // check one by one (saves typed values, fires per-round PB toast/trophy).
+      for (const r of rounds) {
+        await roundHandles.current.get(r.id)?.complete(completed)
+      }
+    } finally {
+      setCompletingAll(false)
+    }
+  }
 
   async function handleEditSubmit(formData: FormData) {
     await updateAllRoundsTargets(
@@ -627,8 +651,9 @@ function ExerciseGroup({
             {rounds.length > 1 && ` × ${rounds.length} rounds`}
           </p>
         </div>
-        {!disabled && canEdit && (
+        {!disabled && (canLog || canEdit) && (
           <div className="flex gap-1">
+            {canEdit && (
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="sm" title="Edit">
@@ -705,6 +730,23 @@ function ExerciseGroup({
                 </form>
               </DialogContent>
             </Dialog>
+            )}
+            {canLog && (
+              <Button
+                variant={allCompleted ? "default" : "outline"}
+                size="sm"
+                onClick={handleCompleteAll}
+                disabled={completingAll}
+                title={
+                  allCompleted
+                    ? "Mark all rounds incomplete"
+                    : "Complete all rounds"
+                }
+              >
+                <CheckCheck className="h-4 w-4" />
+              </Button>
+            )}
+            {canEdit && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" title="Delete Exercise">
@@ -730,6 +772,7 @@ function ExerciseGroup({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            )}
           </div>
         )}
       </div>
@@ -749,6 +792,10 @@ function ExerciseGroup({
           // would keep showing the stale target after a target update.
           <RoundRow
             key={`${round.id}:${round.targetReps}:${round.targetWeight}:${round.targetDuration}`}
+            ref={(handle) => {
+              if (handle) roundHandles.current.set(round.id, handle)
+              else roundHandles.current.delete(round.id)
+            }}
             round={round}
             workoutId={workoutId}
             disabled={disabled}
@@ -774,19 +821,16 @@ function ExerciseGroup({
   )
 }
 
-function RoundRow({
-  round,
-  workoutId,
-  disabled,
-  canEdit,
-  canLog,
-}: {
-  round: SetExercise
-  workoutId: string
-  disabled: boolean
-  canEdit: boolean
-  canLog: boolean
-}) {
+const RoundRow = forwardRef<
+  RoundHandle,
+  {
+    round: SetExercise
+    workoutId: string
+    disabled: boolean
+    canEdit: boolean
+    canLog: boolean
+  }
+>(function RoundRow({ round, workoutId, disabled, canEdit, canLog }, ref) {
   // Default to target values if no actual values have been entered yet
   const [actualReps, setActualReps] = useState(
     round.actualReps?.toString() || round.targetReps?.toString() || ""
@@ -797,25 +841,31 @@ function RoundRow({
   const [notes, setNotes] = useState(round.notes || "")
   const [pbHits, setPbHits] = useState<PbHit[]>([])
 
-  const handleUpdate = async (completed: boolean) => {
-    const formData = new FormData()
-    formData.set("actualReps", actualReps)
-    formData.set("actualWeight", actualWeight)
-    formData.set("notes", notes)
-    formData.set("completed", completed.toString())
-    const result = await updateExercise(round.id, workoutId, formData)
+  const handleUpdate = useCallback(
+    async (completed: boolean) => {
+      const formData = new FormData()
+      formData.set("actualReps", actualReps)
+      formData.set("actualWeight", actualWeight)
+      formData.set("notes", notes)
+      formData.set("completed", completed.toString())
+      const result = await updateExercise(round.id, workoutId, formData)
 
-    const hits: PbHit[] =
-      result && "pbs" in result ? result.pbs ?? [] : []
-    if (completed && hits.length > 0) {
-      setPbHits(hits)
-      toast.success(`New personal best — ${round.exercise.name}! 🎉`, {
-        description: hits.map(pbHitText).join(" · "),
-      })
-    } else if (!completed) {
-      setPbHits([])
-    }
-  }
+      const hits: PbHit[] =
+        result && "pbs" in result ? result.pbs ?? [] : []
+      if (completed && hits.length > 0) {
+        setPbHits(hits)
+        toast.success(`New personal best — ${round.exercise.name}! 🎉`, {
+          description: hits.map(pbHitText).join(" · "),
+        })
+      } else if (!completed) {
+        setPbHits([])
+      }
+    },
+    [actualReps, actualWeight, notes, round.id, round.exercise.name, workoutId]
+  )
+
+  // Let the parent ExerciseGroup trigger this row's save for "complete all".
+  useImperativeHandle(ref, () => ({ complete: handleUpdate }), [handleUpdate])
 
   return (
     <div className="flex items-center gap-2 pl-2 border-l-2">
@@ -887,7 +937,7 @@ function RoundRow({
       )}
     </div>
   )
-}
+})
 
 function AddExerciseDialog({
     setId,
