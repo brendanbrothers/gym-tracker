@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw, Play, Ban } from "lucide-react"
+import Link from "next/link"
+import { Pencil, Plus, Trash2, Check, Trophy, RotateCcw, Play, Ban, User } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -267,9 +268,18 @@ export function WorkoutEditor({
       <div className="sticky top-0 z-10 bg-background pb-4 -mx-6 px-6 -mt-6 pt-6 border-b">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold">
-              {workout.client.name} -{" "}
-              {formatWorkoutDateTime(workout.date)}
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <span>
+                {workout.client.name} -{" "}
+                {formatWorkoutDateTime(workout.date)}
+              </span>
+              <Link
+                href={`/clients/${workout.clientId}`}
+                className="text-muted-foreground hover:text-foreground"
+                title={`View ${workout.client.name}`}
+              >
+                <User className="h-5 w-5" />
+              </Link>
             </h1>
             <p className="text-muted-foreground">
               {workout.trainer && `Trainer: ${workout.trainer.name}`}

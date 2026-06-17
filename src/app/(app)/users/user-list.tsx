@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Pencil, UserMinus, UserPlus } from "lucide-react"
 import { APP_TIME_ZONE } from "@/lib/utils"
@@ -131,7 +132,15 @@ export function UserList({
         <TableBody>
           {displayedUsers.map((user) => (
             <TableRow key={user.id} className={user.status === "FORMER" ? "opacity-60" : ""}>
-              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell className="font-medium">
+                {userType === "client" ? (
+                  <Link href={`/clients/${user.id}`} className="hover:underline">
+                    {user.name}
+                  </Link>
+                ) : (
+                  user.name
+                )}
+              </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <span
