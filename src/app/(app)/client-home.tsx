@@ -3,6 +3,11 @@ import { ClipboardList, Calendar, Ban } from "lucide-react"
 import { StatusBadge } from "@/components/status-badge"
 import { prisma } from "@/lib/db"
 import {
+  APP_TIME_ZONE,
+  appTzDayRange,
+  formatWorkoutWeekdayTime,
+} from "@/lib/utils"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -24,8 +29,8 @@ type ClientHomeProps = {
 }
 
 export async function ClientHome({ userId, userName }: ClientHomeProps) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // "Today" boundary in the gym's timezone, not the server's UTC day.
+  const { start: today } = appTzDayRange()
 
   // Upcoming workouts (scheduled or in progress, date >= today)
   const upcomingWorkouts = await prisma.workoutSession.findMany({
@@ -92,6 +97,7 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
         <h1 className="text-2xl font-bold">Welcome, {userName}</h1>
         <p className="text-muted-foreground">
           {new Date().toLocaleDateString("en-US", {
+            timeZone: APP_TIME_ZONE,
             weekday: "long",
             year: "numeric",
             month: "long",
@@ -129,13 +135,7 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
                   <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell>
                       <Link href={`/workouts/${workout.id}`} className="block font-medium">
-                        {workout.date.toLocaleString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {formatWorkoutWeekdayTime(workout.date)}
                       </Link>
                     </TableCell>
                     <TableCell>
@@ -196,13 +196,7 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
                   <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell>
                       <Link href={`/workouts/${workout.id}`} className="block font-medium">
-                        {workout.date.toLocaleString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {formatWorkoutWeekdayTime(workout.date)}
                       </Link>
                     </TableCell>
                     <TableCell>
@@ -259,13 +253,7 @@ export async function ClientHome({ userId, userName }: ClientHomeProps) {
                   <TableRow key={workout.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell>
                       <Link href={`/workouts/${workout.id}`} className="block font-medium">
-                        {workout.date.toLocaleString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {formatWorkoutWeekdayTime(workout.date)}
                       </Link>
                     </TableCell>
                     <TableCell>

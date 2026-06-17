@@ -22,7 +22,7 @@ import {
 import { HomeActions } from "./home-actions"
 import { ClientHome } from "./client-home"
 import { StatusBadge } from "@/components/status-badge"
-import { formatWorkoutTime } from "@/lib/utils"
+import { APP_TIME_ZONE, appTzDayRange, formatWorkoutTime } from "@/lib/utils"
 
 type WorkoutRow = {
   id: string
@@ -95,11 +95,8 @@ export default async function Home() {
     return <ClientHome userId={session.user.id} userName={session.user.name || "User"} />
   }
 
-  // Get today's date range
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  // Today's date range, in the gym's timezone (not the server's UTC day).
+  const { start: today, end: tomorrow } = appTzDayRange()
 
   // Get today's workouts
   const todaysWorkouts = await prisma.workoutSession.findMany({
@@ -158,6 +155,7 @@ export default async function Home() {
         <h1 className="text-2xl font-bold">Welcome, {session?.user.name}</h1>
         <p className="text-muted-foreground">
           {new Date().toLocaleDateString("en-US", {
+            timeZone: APP_TIME_ZONE,
             weekday: "long",
             year: "numeric",
             month: "long",

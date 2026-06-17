@@ -8,6 +8,7 @@ import {
   getPersonalBests,
   type PbMetric,
 } from "@/lib/personal-bests"
+import { dateAndTimeToISO, toDateValue } from "@/lib/utils"
 
 export async function getProgressData(
   exerciseId: string,
@@ -24,10 +25,10 @@ export async function getProgressData(
   // Build date filter
   const dateFilter: { gte?: Date; lte?: Date } = {}
   if (startDate) {
-    dateFilter.gte = new Date(startDate)
+    dateFilter.gte = new Date(dateAndTimeToISO(startDate, "00:00"))
   }
   if (endDate) {
-    dateFilter.lte = new Date(endDate + "T23:59:59")
+    dateFilter.lte = new Date(dateAndTimeToISO(endDate, "23:59"))
   } else if (startDate) {
     // If only start date specified, go to today
     dateFilter.lte = new Date()
@@ -76,7 +77,7 @@ export async function getProgressData(
   }>()
 
   for (const ex of setExercises) {
-    const date = ex.workoutSet.workoutSession.date.toISOString().split("T")[0]
+    const date = toDateValue(ex.workoutSet.workoutSession.date)
     const clientName = ex.workoutSet.workoutSession.client.name
     const key = `${date}-${clientName}`
 
@@ -124,10 +125,10 @@ export async function getExerciseSetHistory(
   // Build date filter
   const dateFilter: { gte?: Date; lte?: Date } = {}
   if (startDate) {
-    dateFilter.gte = new Date(startDate)
+    dateFilter.gte = new Date(dateAndTimeToISO(startDate, "00:00"))
   }
   if (endDate) {
-    dateFilter.lte = new Date(endDate + "T23:59:59")
+    dateFilter.lte = new Date(dateAndTimeToISO(endDate, "23:59"))
   } else if (startDate) {
     // If only start date specified, go to today
     dateFilter.lte = new Date()
@@ -177,7 +178,7 @@ export async function getExerciseSetHistory(
 
   const rows = setExercises.map((ex) => ({
     id: ex.id,
-    date: ex.workoutSet.workoutSession.date.toISOString().split("T")[0],
+    date: toDateValue(ex.workoutSet.workoutSession.date),
     clientName: ex.workoutSet.workoutSession.client.name,
     round: ex.round,
     order: ex.order,

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, UserMinus, UserPlus } from "lucide-react"
+import { APP_TIME_ZONE } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -143,7 +144,7 @@ export function UserList({
                   {user.status === "ACTIVE" ? "Active" : "Former"}
                 </span>
               </TableCell>
-              <TableCell>{new Date(user.createdAt).toLocaleDateString("en-US")}</TableCell>
+              <TableCell>{new Date(user.createdAt).toLocaleDateString("en-US", { timeZone: APP_TIME_ZONE })}</TableCell>
               <TableCell>
                 <div className="flex gap-1">
                   <Button
