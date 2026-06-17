@@ -72,10 +72,13 @@ export async function createWorkout(formData: FormData) {
               order: exercise.order,
               round: exercise.round,
               modifier: exercise.modifier,
-              targetReps: exercise.targetReps,
-              targetWeight: exercise.targetWeight,
-              targetDuration: exercise.targetDuration,
-              // Don't copy actuals - those are for the new workout to fill in
+              // Seed the new targets from what was actually performed last time
+              // (per round) so the trainer sees the real progression, e.g. set 1
+              // @ 30 then set 2 @ 35. Fall back to the previous target when a
+              // round wasn't logged. Actuals stay empty for the new session.
+              targetReps: exercise.actualReps ?? exercise.targetReps,
+              targetWeight: exercise.actualWeight ?? exercise.targetWeight,
+              targetDuration: exercise.actualDuration ?? exercise.targetDuration,
               completed: false,
             },
           })
