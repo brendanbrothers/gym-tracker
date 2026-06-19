@@ -29,14 +29,25 @@ function groupByOrder(exercises: Round[]) {
   return Array.from(groups.values())
 }
 
-function targetSummary(rounds: Round[]) {
-  const first = rounds[0]
-  const parts: string[] = []
-  if (first.targetReps) parts.push(`${first.targetReps} reps`)
-  if (first.targetWeight) parts.push(`@ ${first.targetWeight} lbs`)
-  if (first.targetDuration) parts.push(`${first.targetDuration}s`)
-  if (rounds.length > 1) parts.push(`× ${rounds.length} rounds`)
-  return parts.join(" ")
+// What the client actually did this round, falling back to the programmed
+// target only when a round wasn't logged (e.g. a not-yet-completed session).
+function roundValue(r: Round) {
+  const reps = r.actualReps ?? r.targetReps
+  const weight = r.actualWeight ?? r.targetWeight
+  const duration = r.actualDuration ?? r.targetDuration
+  if (reps != null && weight != null) return `${reps}×${weight}`
+  if (reps != null) return `${reps} reps`
+  if (duration != null) return `${duration}s`
+  if (weight != null) return `${weight} lbs`
+  return null
+}
+
+// Per-round performance, e.g. "10×35, 10×40, 8×45".
+function performedSummary(rounds: Round[]) {
+  return rounds
+    .map(roundValue)
+    .filter((v): v is string => v != null)
+    .join(", ")
 }
 
 export function ReferencePane({
@@ -189,7 +200,7 @@ export function ReferencePane({
                   <div className="flex items-baseline justify-between gap-2">
                     <span>{rounds[0].exercise.name}</span>
                     <span className="text-right text-xs text-muted-foreground">
-                      {targetSummary(rounds)}
+                      {performedSummary(rounds)}
                     </span>
                   </div>
                   {rounds[0].modifier && (

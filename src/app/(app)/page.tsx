@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth"
 import Link from "next/link"
-import { ClipboardList } from "lucide-react"
+import { ClipboardList, Ban } from "lucide-react"
 
 import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
@@ -137,6 +137,11 @@ export default async function Home() {
   const completedWorkouts = todaysWorkouts.filter(
     (w) => w.status === "COMPLETED"
   )
+  // Cancelled today still surface here so a trainer can open one and reschedule
+  // it instead of re-entering the whole workout.
+  const cancelledWorkouts = todaysWorkouts.filter(
+    (w) => w.status === "CANCELLED"
+  )
 
   // Get data needed for forms
   const clients = await prisma.user.findMany({
@@ -216,6 +221,24 @@ export default async function Home() {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancelled Today — shown only when there are any, so they can be reopened/rescheduled */}
+      {cancelledWorkouts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5" />
+              Cancelled Today
+            </CardTitle>
+            <CardDescription>
+              {`${cancelledWorkouts.length} cancelled workout${cancelledWorkouts.length > 1 ? "s" : ""} — open one to reschedule`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TodaysWorkoutsTable workouts={cancelledWorkouts} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
