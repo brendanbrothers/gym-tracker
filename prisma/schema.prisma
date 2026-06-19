@@ -133,12 +133,22 @@ model WorkoutSession {
   gym   Gym?    @relation(fields: [gymId], references: [id])
   gymId String?
 
+  // Copy lineage: the session this one was copied from, when a trainer used
+  // "copy this whole workout". Lets us count how many times a client has run
+  // the same workout. Null when built fresh. SetNull (not Cascade) so deleting
+  // an old source never deletes the sessions copied from it — the chain just
+  // truncates.
+  copiedFrom   WorkoutSession?  @relation("CopyLineage", fields: [copiedFromId], references: [id], onDelete: SetNull)
+  copiedFromId String?
+  copies       WorkoutSession[] @relation("CopyLineage")
+
   sets WorkoutSet[]
 
   @@index([clientId])
   @@index([trainerId])
   @@index([date])
   @@index([gymId])
+  @@index([copiedFromId])
 }
 
 enum SessionStatus {

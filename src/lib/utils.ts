@@ -128,6 +128,44 @@ export function appTzDayRange(instant: Date = new Date()) {
   return { start, end }
 }
 
+/**
+ * The UTC [start, end) instants of the Mon–Sun app-timezone week containing
+ * `instant` (defaults to now). Monday 00:00 local through the next Monday 00:00.
+ * Use for "this week" queries so the window matches the gym's local week. (The
+ * 7-day span is computed in absolute ms, so at a DST boundary the end can land
+ * ±1h off local midnight — acceptable for soft week-membership filtering, as no
+ * sessions sit at midnight.)
+ */
+export function appTzWeekRange(instant: Date = new Date()) {
+  const p = zonedParts(instant)
+  // Day-of-week of the local calendar day (0=Sun..6=Sat). Read it from a UTC
+  // date built from the local Y-M-D so the server's own zone never interferes.
+  const dow = new Date(Date.UTC(+p.year, +p.month - 1, +p.day)).getUTCDay()
+  const daysSinceMonday = (dow + 6) % 7 // Sun→6, Mon→0, ... Sat→5
+  const dayStart = zonedWallTimeToUtc(`${p.year}-${p.month}-${p.day}`, "00:00")
+  const start = new Date(dayStart.getTime() - daysSinceMonday * 24 * 60 * 60 * 1000)
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
+  return { start, end }
+}
+
+/** Format a workout's stored instant as a weekday + date, e.g. "Mon, Jun 15". */
+export function formatWorkoutDay(date: Date | string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    timeZone: APP_TIME_ZONE,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })
+}
+
+/** Short weekday only, e.g. "Mon". */
+export function formatWorkoutWeekday(date: Date | string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    timeZone: APP_TIME_ZONE,
+    weekday: "short",
+  })
+}
+
 /** Format a workout's stored instant as date + time, e.g. "Jun 15, 2026, 9:30 AM". */
 export function formatWorkoutDateTime(date: Date | string) {
   return new Date(date).toLocaleString("en-US", {

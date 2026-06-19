@@ -34,6 +34,7 @@ export type WorkoutSessionMinAggregateOutputType = {
   clientId: string | null
   trainerId: string | null
   gymId: string | null
+  copiedFromId: string | null
 }
 
 export type WorkoutSessionMaxAggregateOutputType = {
@@ -46,6 +47,7 @@ export type WorkoutSessionMaxAggregateOutputType = {
   clientId: string | null
   trainerId: string | null
   gymId: string | null
+  copiedFromId: string | null
 }
 
 export type WorkoutSessionCountAggregateOutputType = {
@@ -58,6 +60,7 @@ export type WorkoutSessionCountAggregateOutputType = {
   clientId: number
   trainerId: number
   gymId: number
+  copiedFromId: number
   _all: number
 }
 
@@ -72,6 +75,7 @@ export type WorkoutSessionMinAggregateInputType = {
   clientId?: true
   trainerId?: true
   gymId?: true
+  copiedFromId?: true
 }
 
 export type WorkoutSessionMaxAggregateInputType = {
@@ -84,6 +88,7 @@ export type WorkoutSessionMaxAggregateInputType = {
   clientId?: true
   trainerId?: true
   gymId?: true
+  copiedFromId?: true
 }
 
 export type WorkoutSessionCountAggregateInputType = {
@@ -96,6 +101,7 @@ export type WorkoutSessionCountAggregateInputType = {
   clientId?: true
   trainerId?: true
   gymId?: true
+  copiedFromId?: true
   _all?: true
 }
 
@@ -181,6 +187,7 @@ export type WorkoutSessionGroupByOutputType = {
   clientId: string
   trainerId: string | null
   gymId: string | null
+  copiedFromId: string | null
   _count: WorkoutSessionCountAggregateOutputType | null
   _min: WorkoutSessionMinAggregateOutputType | null
   _max: WorkoutSessionMaxAggregateOutputType | null
@@ -214,9 +221,12 @@ export type WorkoutSessionWhereInput = {
   clientId?: Prisma.StringFilter<"WorkoutSession"> | string
   trainerId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
   gymId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
+  copiedFromId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
   client?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   trainer?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   gym?: Prisma.XOR<Prisma.GymNullableScalarRelationFilter, Prisma.GymWhereInput> | null
+  copiedFrom?: Prisma.XOR<Prisma.WorkoutSessionNullableScalarRelationFilter, Prisma.WorkoutSessionWhereInput> | null
+  copies?: Prisma.WorkoutSessionListRelationFilter
   sets?: Prisma.WorkoutSetListRelationFilter
 }
 
@@ -230,9 +240,12 @@ export type WorkoutSessionOrderByWithRelationInput = {
   clientId?: Prisma.SortOrder
   trainerId?: Prisma.SortOrderInput | Prisma.SortOrder
   gymId?: Prisma.SortOrderInput | Prisma.SortOrder
+  copiedFromId?: Prisma.SortOrderInput | Prisma.SortOrder
   client?: Prisma.UserOrderByWithRelationInput
   trainer?: Prisma.UserOrderByWithRelationInput
   gym?: Prisma.GymOrderByWithRelationInput
+  copiedFrom?: Prisma.WorkoutSessionOrderByWithRelationInput
+  copies?: Prisma.WorkoutSessionOrderByRelationAggregateInput
   sets?: Prisma.WorkoutSetOrderByRelationAggregateInput
 }
 
@@ -249,9 +262,12 @@ export type WorkoutSessionWhereUniqueInput = Prisma.AtLeast<{
   clientId?: Prisma.StringFilter<"WorkoutSession"> | string
   trainerId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
   gymId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
+  copiedFromId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
   client?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   trainer?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   gym?: Prisma.XOR<Prisma.GymNullableScalarRelationFilter, Prisma.GymWhereInput> | null
+  copiedFrom?: Prisma.XOR<Prisma.WorkoutSessionNullableScalarRelationFilter, Prisma.WorkoutSessionWhereInput> | null
+  copies?: Prisma.WorkoutSessionListRelationFilter
   sets?: Prisma.WorkoutSetListRelationFilter
 }, "id">
 
@@ -265,6 +281,7 @@ export type WorkoutSessionOrderByWithAggregationInput = {
   clientId?: Prisma.SortOrder
   trainerId?: Prisma.SortOrderInput | Prisma.SortOrder
   gymId?: Prisma.SortOrderInput | Prisma.SortOrder
+  copiedFromId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.WorkoutSessionCountOrderByAggregateInput
   _max?: Prisma.WorkoutSessionMaxOrderByAggregateInput
   _min?: Prisma.WorkoutSessionMinOrderByAggregateInput
@@ -283,6 +300,7 @@ export type WorkoutSessionScalarWhereWithAggregatesInput = {
   clientId?: Prisma.StringWithAggregatesFilter<"WorkoutSession"> | string
   trainerId?: Prisma.StringNullableWithAggregatesFilter<"WorkoutSession"> | string | null
   gymId?: Prisma.StringNullableWithAggregatesFilter<"WorkoutSession"> | string | null
+  copiedFromId?: Prisma.StringNullableWithAggregatesFilter<"WorkoutSession"> | string | null
 }
 
 export type WorkoutSessionCreateInput = {
@@ -295,6 +313,8 @@ export type WorkoutSessionCreateInput = {
   client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
   trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
   gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -308,6 +328,8 @@ export type WorkoutSessionUncheckedCreateInput = {
   clientId: string
   trainerId?: string | null
   gymId?: string | null
+  copiedFromId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -321,6 +343,8 @@ export type WorkoutSessionUpdateInput = {
   client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
   trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
   gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -334,6 +358,8 @@ export type WorkoutSessionUncheckedUpdateInput = {
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -347,6 +373,7 @@ export type WorkoutSessionCreateManyInput = {
   clientId: string
   trainerId?: string | null
   gymId?: string | null
+  copiedFromId?: string | null
 }
 
 export type WorkoutSessionUpdateManyMutationInput = {
@@ -368,6 +395,7 @@ export type WorkoutSessionUncheckedUpdateManyInput = {
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutSessionListRelationFilter = {
@@ -380,6 +408,11 @@ export type WorkoutSessionOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type WorkoutSessionNullableScalarRelationFilter = {
+  is?: Prisma.WorkoutSessionWhereInput | null
+  isNot?: Prisma.WorkoutSessionWhereInput | null
+}
+
 export type WorkoutSessionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -390,6 +423,7 @@ export type WorkoutSessionCountOrderByAggregateInput = {
   clientId?: Prisma.SortOrder
   trainerId?: Prisma.SortOrder
   gymId?: Prisma.SortOrder
+  copiedFromId?: Prisma.SortOrder
 }
 
 export type WorkoutSessionMaxOrderByAggregateInput = {
@@ -402,6 +436,7 @@ export type WorkoutSessionMaxOrderByAggregateInput = {
   clientId?: Prisma.SortOrder
   trainerId?: Prisma.SortOrder
   gymId?: Prisma.SortOrder
+  copiedFromId?: Prisma.SortOrder
 }
 
 export type WorkoutSessionMinOrderByAggregateInput = {
@@ -414,6 +449,7 @@ export type WorkoutSessionMinOrderByAggregateInput = {
   clientId?: Prisma.SortOrder
   trainerId?: Prisma.SortOrder
   gymId?: Prisma.SortOrder
+  copiedFromId?: Prisma.SortOrder
 }
 
 export type WorkoutSessionScalarRelationFilter = {
@@ -547,8 +583,66 @@ export type WorkoutSessionUncheckedUpdateManyWithoutTrainerNestedInput = {
   deleteMany?: Prisma.WorkoutSessionScalarWhereInput | Prisma.WorkoutSessionScalarWhereInput[]
 }
 
+export type WorkoutSessionCreateNestedOneWithoutCopiesInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiesInput>
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiesInput
+  connect?: Prisma.WorkoutSessionWhereUniqueInput
+}
+
+export type WorkoutSessionCreateNestedManyWithoutCopiedFromInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput> | Prisma.WorkoutSessionCreateWithoutCopiedFromInput[] | Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput[]
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput | Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput[]
+  createMany?: Prisma.WorkoutSessionCreateManyCopiedFromInputEnvelope
+  connect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+}
+
+export type WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput> | Prisma.WorkoutSessionCreateWithoutCopiedFromInput[] | Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput[]
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput | Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput[]
+  createMany?: Prisma.WorkoutSessionCreateManyCopiedFromInputEnvelope
+  connect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+}
+
 export type EnumSessionStatusFieldUpdateOperationsInput = {
   set?: $Enums.SessionStatus
+}
+
+export type WorkoutSessionUpdateOneWithoutCopiesNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiesInput>
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiesInput
+  upsert?: Prisma.WorkoutSessionUpsertWithoutCopiesInput
+  disconnect?: Prisma.WorkoutSessionWhereInput | boolean
+  delete?: Prisma.WorkoutSessionWhereInput | boolean
+  connect?: Prisma.WorkoutSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WorkoutSessionUpdateToOneWithWhereWithoutCopiesInput, Prisma.WorkoutSessionUpdateWithoutCopiesInput>, Prisma.WorkoutSessionUncheckedUpdateWithoutCopiesInput>
+}
+
+export type WorkoutSessionUpdateManyWithoutCopiedFromNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput> | Prisma.WorkoutSessionCreateWithoutCopiedFromInput[] | Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput[]
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput | Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput[]
+  upsert?: Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutCopiedFromInput | Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutCopiedFromInput[]
+  createMany?: Prisma.WorkoutSessionCreateManyCopiedFromInputEnvelope
+  set?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  delete?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  connect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  update?: Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutCopiedFromInput | Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutCopiedFromInput[]
+  updateMany?: Prisma.WorkoutSessionUpdateManyWithWhereWithoutCopiedFromInput | Prisma.WorkoutSessionUpdateManyWithWhereWithoutCopiedFromInput[]
+  deleteMany?: Prisma.WorkoutSessionScalarWhereInput | Prisma.WorkoutSessionScalarWhereInput[]
+}
+
+export type WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput> | Prisma.WorkoutSessionCreateWithoutCopiedFromInput[] | Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput[]
+  connectOrCreate?: Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput | Prisma.WorkoutSessionCreateOrConnectWithoutCopiedFromInput[]
+  upsert?: Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutCopiedFromInput | Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutCopiedFromInput[]
+  createMany?: Prisma.WorkoutSessionCreateManyCopiedFromInputEnvelope
+  set?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  delete?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  connect?: Prisma.WorkoutSessionWhereUniqueInput | Prisma.WorkoutSessionWhereUniqueInput[]
+  update?: Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutCopiedFromInput | Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutCopiedFromInput[]
+  updateMany?: Prisma.WorkoutSessionUpdateManyWithWhereWithoutCopiedFromInput | Prisma.WorkoutSessionUpdateManyWithWhereWithoutCopiedFromInput[]
+  deleteMany?: Prisma.WorkoutSessionScalarWhereInput | Prisma.WorkoutSessionScalarWhereInput[]
 }
 
 export type WorkoutSessionCreateNestedOneWithoutSetsInput = {
@@ -574,6 +668,8 @@ export type WorkoutSessionCreateWithoutGymInput = {
   updatedAt?: Date | string
   client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
   trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -586,6 +682,8 @@ export type WorkoutSessionUncheckedCreateWithoutGymInput = {
   updatedAt?: Date | string
   clientId: string
   trainerId?: string | null
+  copiedFromId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -628,6 +726,7 @@ export type WorkoutSessionScalarWhereInput = {
   clientId?: Prisma.StringFilter<"WorkoutSession"> | string
   trainerId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
   gymId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
+  copiedFromId?: Prisma.StringNullableFilter<"WorkoutSession"> | string | null
 }
 
 export type WorkoutSessionCreateWithoutClientInput = {
@@ -639,6 +738,8 @@ export type WorkoutSessionCreateWithoutClientInput = {
   updatedAt?: Date | string
   trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
   gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -651,6 +752,8 @@ export type WorkoutSessionUncheckedCreateWithoutClientInput = {
   updatedAt?: Date | string
   trainerId?: string | null
   gymId?: string | null
+  copiedFromId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -673,6 +776,8 @@ export type WorkoutSessionCreateWithoutTrainerInput = {
   updatedAt?: Date | string
   client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
   gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -685,6 +790,8 @@ export type WorkoutSessionUncheckedCreateWithoutTrainerInput = {
   updatedAt?: Date | string
   clientId: string
   gymId?: string | null
+  copiedFromId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
   sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
 }
 
@@ -730,6 +837,132 @@ export type WorkoutSessionUpdateManyWithWhereWithoutTrainerInput = {
   data: Prisma.XOR<Prisma.WorkoutSessionUpdateManyMutationInput, Prisma.WorkoutSessionUncheckedUpdateManyWithoutTrainerInput>
 }
 
+export type WorkoutSessionCreateWithoutCopiesInput = {
+  id?: string
+  date: Date | string
+  notes?: string | null
+  status?: $Enums.SessionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
+  trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
+  gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
+}
+
+export type WorkoutSessionUncheckedCreateWithoutCopiesInput = {
+  id?: string
+  date: Date | string
+  notes?: string | null
+  status?: $Enums.SessionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  clientId: string
+  trainerId?: string | null
+  gymId?: string | null
+  copiedFromId?: string | null
+  sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
+}
+
+export type WorkoutSessionCreateOrConnectWithoutCopiesInput = {
+  where: Prisma.WorkoutSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiesInput>
+}
+
+export type WorkoutSessionCreateWithoutCopiedFromInput = {
+  id?: string
+  date: Date | string
+  notes?: string | null
+  status?: $Enums.SessionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
+  trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
+  gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
+  sets?: Prisma.WorkoutSetCreateNestedManyWithoutWorkoutSessionInput
+}
+
+export type WorkoutSessionUncheckedCreateWithoutCopiedFromInput = {
+  id?: string
+  date: Date | string
+  notes?: string | null
+  status?: $Enums.SessionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  clientId: string
+  trainerId?: string | null
+  gymId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
+  sets?: Prisma.WorkoutSetUncheckedCreateNestedManyWithoutWorkoutSessionInput
+}
+
+export type WorkoutSessionCreateOrConnectWithoutCopiedFromInput = {
+  where: Prisma.WorkoutSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput>
+}
+
+export type WorkoutSessionCreateManyCopiedFromInputEnvelope = {
+  data: Prisma.WorkoutSessionCreateManyCopiedFromInput | Prisma.WorkoutSessionCreateManyCopiedFromInput[]
+  skipDuplicates?: boolean
+}
+
+export type WorkoutSessionUpsertWithoutCopiesInput = {
+  update: Prisma.XOR<Prisma.WorkoutSessionUpdateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedUpdateWithoutCopiesInput>
+  create: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiesInput>
+  where?: Prisma.WorkoutSessionWhereInput
+}
+
+export type WorkoutSessionUpdateToOneWithWhereWithoutCopiesInput = {
+  where?: Prisma.WorkoutSessionWhereInput
+  data: Prisma.XOR<Prisma.WorkoutSessionUpdateWithoutCopiesInput, Prisma.WorkoutSessionUncheckedUpdateWithoutCopiesInput>
+}
+
+export type WorkoutSessionUpdateWithoutCopiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
+  trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
+  gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
+}
+
+export type WorkoutSessionUncheckedUpdateWithoutCopiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  clientId?: Prisma.StringFieldUpdateOperationsInput | string
+  trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
+}
+
+export type WorkoutSessionUpsertWithWhereUniqueWithoutCopiedFromInput = {
+  where: Prisma.WorkoutSessionWhereUniqueInput
+  update: Prisma.XOR<Prisma.WorkoutSessionUpdateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedUpdateWithoutCopiedFromInput>
+  create: Prisma.XOR<Prisma.WorkoutSessionCreateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedCreateWithoutCopiedFromInput>
+}
+
+export type WorkoutSessionUpdateWithWhereUniqueWithoutCopiedFromInput = {
+  where: Prisma.WorkoutSessionWhereUniqueInput
+  data: Prisma.XOR<Prisma.WorkoutSessionUpdateWithoutCopiedFromInput, Prisma.WorkoutSessionUncheckedUpdateWithoutCopiedFromInput>
+}
+
+export type WorkoutSessionUpdateManyWithWhereWithoutCopiedFromInput = {
+  where: Prisma.WorkoutSessionScalarWhereInput
+  data: Prisma.XOR<Prisma.WorkoutSessionUpdateManyMutationInput, Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromInput>
+}
+
 export type WorkoutSessionCreateWithoutSetsInput = {
   id?: string
   date: Date | string
@@ -740,6 +973,8 @@ export type WorkoutSessionCreateWithoutSetsInput = {
   client: Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput
   trainer?: Prisma.UserCreateNestedOneWithoutTrainedSessionsInput
   gym?: Prisma.GymCreateNestedOneWithoutWorkoutSessionsInput
+  copiedFrom?: Prisma.WorkoutSessionCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.WorkoutSessionCreateNestedManyWithoutCopiedFromInput
 }
 
 export type WorkoutSessionUncheckedCreateWithoutSetsInput = {
@@ -752,6 +987,8 @@ export type WorkoutSessionUncheckedCreateWithoutSetsInput = {
   clientId: string
   trainerId?: string | null
   gymId?: string | null
+  copiedFromId?: string | null
+  copies?: Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutCopiedFromInput
 }
 
 export type WorkoutSessionCreateOrConnectWithoutSetsInput = {
@@ -780,6 +1017,8 @@ export type WorkoutSessionUpdateWithoutSetsInput = {
   client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
   trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
   gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
 }
 
 export type WorkoutSessionUncheckedUpdateWithoutSetsInput = {
@@ -792,6 +1031,8 @@ export type WorkoutSessionUncheckedUpdateWithoutSetsInput = {
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
 }
 
 export type WorkoutSessionCreateManyGymInput = {
@@ -803,6 +1044,7 @@ export type WorkoutSessionCreateManyGymInput = {
   updatedAt?: Date | string
   clientId: string
   trainerId?: string | null
+  copiedFromId?: string | null
 }
 
 export type WorkoutSessionUpdateWithoutGymInput = {
@@ -814,6 +1056,8 @@ export type WorkoutSessionUpdateWithoutGymInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
   trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -826,6 +1070,8 @@ export type WorkoutSessionUncheckedUpdateWithoutGymInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -838,6 +1084,7 @@ export type WorkoutSessionUncheckedUpdateManyWithoutGymInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutSessionCreateManyClientInput = {
@@ -849,6 +1096,7 @@ export type WorkoutSessionCreateManyClientInput = {
   updatedAt?: Date | string
   trainerId?: string | null
   gymId?: string | null
+  copiedFromId?: string | null
 }
 
 export type WorkoutSessionCreateManyTrainerInput = {
@@ -860,6 +1108,7 @@ export type WorkoutSessionCreateManyTrainerInput = {
   updatedAt?: Date | string
   clientId: string
   gymId?: string | null
+  copiedFromId?: string | null
 }
 
 export type WorkoutSessionUpdateWithoutClientInput = {
@@ -871,6 +1120,8 @@ export type WorkoutSessionUpdateWithoutClientInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
   gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -883,6 +1134,8 @@ export type WorkoutSessionUncheckedUpdateWithoutClientInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -895,6 +1148,7 @@ export type WorkoutSessionUncheckedUpdateManyWithoutClientInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutSessionUpdateWithoutTrainerInput = {
@@ -906,6 +1160,8 @@ export type WorkoutSessionUpdateWithoutTrainerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
   gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copiedFrom?: Prisma.WorkoutSessionUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -918,6 +1174,8 @@ export type WorkoutSessionUncheckedUpdateWithoutTrainerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
   sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
 }
 
@@ -930,6 +1188,59 @@ export type WorkoutSessionUncheckedUpdateManyWithoutTrainerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   clientId?: Prisma.StringFieldUpdateOperationsInput | string
   gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type WorkoutSessionCreateManyCopiedFromInput = {
+  id?: string
+  date: Date | string
+  notes?: string | null
+  status?: $Enums.SessionStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  clientId: string
+  trainerId?: string | null
+  gymId?: string | null
+}
+
+export type WorkoutSessionUpdateWithoutCopiedFromInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  client?: Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput
+  trainer?: Prisma.UserUpdateOneWithoutTrainedSessionsNestedInput
+  gym?: Prisma.GymUpdateOneWithoutWorkoutSessionsNestedInput
+  copies?: Prisma.WorkoutSessionUpdateManyWithoutCopiedFromNestedInput
+  sets?: Prisma.WorkoutSetUpdateManyWithoutWorkoutSessionNestedInput
+}
+
+export type WorkoutSessionUncheckedUpdateWithoutCopiedFromInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  clientId?: Prisma.StringFieldUpdateOperationsInput | string
+  trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copies?: Prisma.WorkoutSessionUncheckedUpdateManyWithoutCopiedFromNestedInput
+  sets?: Prisma.WorkoutSetUncheckedUpdateManyWithoutWorkoutSessionNestedInput
+}
+
+export type WorkoutSessionUncheckedUpdateManyWithoutCopiedFromInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumSessionStatusFieldUpdateOperationsInput | $Enums.SessionStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  clientId?: Prisma.StringFieldUpdateOperationsInput | string
+  trainerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gymId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -938,10 +1249,12 @@ export type WorkoutSessionUncheckedUpdateManyWithoutTrainerInput = {
  */
 
 export type WorkoutSessionCountOutputType = {
+  copies: number
   sets: number
 }
 
 export type WorkoutSessionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  copies?: boolean | WorkoutSessionCountOutputTypeCountCopiesArgs
   sets?: boolean | WorkoutSessionCountOutputTypeCountSetsArgs
 }
 
@@ -953,6 +1266,13 @@ export type WorkoutSessionCountOutputTypeDefaultArgs<ExtArgs extends runtime.Typ
    * Select specific fields to fetch from the WorkoutSessionCountOutputType
    */
   select?: Prisma.WorkoutSessionCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * WorkoutSessionCountOutputType without action
+ */
+export type WorkoutSessionCountOutputTypeCountCopiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkoutSessionWhereInput
 }
 
 /**
@@ -973,9 +1293,12 @@ export type WorkoutSessionSelect<ExtArgs extends runtime.Types.Extensions.Intern
   clientId?: boolean
   trainerId?: boolean
   gymId?: boolean
+  copiedFromId?: boolean
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
+  copies?: boolean | Prisma.WorkoutSession$copiesArgs<ExtArgs>
   sets?: boolean | Prisma.WorkoutSession$setsArgs<ExtArgs>
   _count?: boolean | Prisma.WorkoutSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workoutSession"]>
@@ -990,9 +1313,11 @@ export type WorkoutSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   clientId?: boolean
   trainerId?: boolean
   gymId?: boolean
+  copiedFromId?: boolean
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
 }, ExtArgs["result"]["workoutSession"]>
 
 export type WorkoutSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1005,9 +1330,11 @@ export type WorkoutSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   clientId?: boolean
   trainerId?: boolean
   gymId?: boolean
+  copiedFromId?: boolean
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
 }, ExtArgs["result"]["workoutSession"]>
 
 export type WorkoutSessionSelectScalar = {
@@ -1020,13 +1347,16 @@ export type WorkoutSessionSelectScalar = {
   clientId?: boolean
   trainerId?: boolean
   gymId?: boolean
+  copiedFromId?: boolean
 }
 
-export type WorkoutSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date" | "notes" | "status" | "createdAt" | "updatedAt" | "clientId" | "trainerId" | "gymId", ExtArgs["result"]["workoutSession"]>
+export type WorkoutSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date" | "notes" | "status" | "createdAt" | "updatedAt" | "clientId" | "trainerId" | "gymId" | "copiedFromId", ExtArgs["result"]["workoutSession"]>
 export type WorkoutSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
+  copies?: boolean | Prisma.WorkoutSession$copiesArgs<ExtArgs>
   sets?: boolean | Prisma.WorkoutSession$setsArgs<ExtArgs>
   _count?: boolean | Prisma.WorkoutSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1034,11 +1364,13 @@ export type WorkoutSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Typ
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
 }
 export type WorkoutSessionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   trainer?: boolean | Prisma.WorkoutSession$trainerArgs<ExtArgs>
   gym?: boolean | Prisma.WorkoutSession$gymArgs<ExtArgs>
+  copiedFrom?: boolean | Prisma.WorkoutSession$copiedFromArgs<ExtArgs>
 }
 
 export type $WorkoutSessionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1047,6 +1379,8 @@ export type $WorkoutSessionPayload<ExtArgs extends runtime.Types.Extensions.Inte
     client: Prisma.$UserPayload<ExtArgs>
     trainer: Prisma.$UserPayload<ExtArgs> | null
     gym: Prisma.$GymPayload<ExtArgs> | null
+    copiedFrom: Prisma.$WorkoutSessionPayload<ExtArgs> | null
+    copies: Prisma.$WorkoutSessionPayload<ExtArgs>[]
     sets: Prisma.$WorkoutSetPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1059,6 +1393,7 @@ export type $WorkoutSessionPayload<ExtArgs extends runtime.Types.Extensions.Inte
     clientId: string
     trainerId: string | null
     gymId: string | null
+    copiedFromId: string | null
   }, ExtArgs["result"]["workoutSession"]>
   composites: {}
 }
@@ -1456,6 +1791,8 @@ export interface Prisma__WorkoutSessionClient<T, Null = never, ExtArgs extends r
   client<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   trainer<T extends Prisma.WorkoutSession$trainerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkoutSession$trainerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   gym<T extends Prisma.WorkoutSession$gymArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkoutSession$gymArgs<ExtArgs>>): Prisma.Prisma__GymClient<runtime.Types.Result.GetResult<Prisma.$GymPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  copiedFrom<T extends Prisma.WorkoutSession$copiedFromArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkoutSession$copiedFromArgs<ExtArgs>>): Prisma.Prisma__WorkoutSessionClient<runtime.Types.Result.GetResult<Prisma.$WorkoutSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  copies<T extends Prisma.WorkoutSession$copiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkoutSession$copiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkoutSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sets<T extends Prisma.WorkoutSession$setsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkoutSession$setsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkoutSetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1495,6 +1832,7 @@ export interface WorkoutSessionFieldRefs {
   readonly clientId: Prisma.FieldRef<"WorkoutSession", 'String'>
   readonly trainerId: Prisma.FieldRef<"WorkoutSession", 'String'>
   readonly gymId: Prisma.FieldRef<"WorkoutSession", 'String'>
+  readonly copiedFromId: Prisma.FieldRef<"WorkoutSession", 'String'>
 }
     
 
@@ -1926,6 +2264,49 @@ export type WorkoutSession$gymArgs<ExtArgs extends runtime.Types.Extensions.Inte
    */
   include?: Prisma.GymInclude<ExtArgs> | null
   where?: Prisma.GymWhereInput
+}
+
+/**
+ * WorkoutSession.copiedFrom
+ */
+export type WorkoutSession$copiedFromArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WorkoutSession
+   */
+  select?: Prisma.WorkoutSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WorkoutSession
+   */
+  omit?: Prisma.WorkoutSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkoutSessionInclude<ExtArgs> | null
+  where?: Prisma.WorkoutSessionWhereInput
+}
+
+/**
+ * WorkoutSession.copies
+ */
+export type WorkoutSession$copiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WorkoutSession
+   */
+  select?: Prisma.WorkoutSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WorkoutSession
+   */
+  omit?: Prisma.WorkoutSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkoutSessionInclude<ExtArgs> | null
+  where?: Prisma.WorkoutSessionWhereInput
+  orderBy?: Prisma.WorkoutSessionOrderByWithRelationInput | Prisma.WorkoutSessionOrderByWithRelationInput[]
+  cursor?: Prisma.WorkoutSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkoutSessionScalarFieldEnum | Prisma.WorkoutSessionScalarFieldEnum[]
 }
 
 /**

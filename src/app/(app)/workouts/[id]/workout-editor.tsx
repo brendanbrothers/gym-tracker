@@ -1,9 +1,9 @@
 "use client"
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Pencil, Plus, Trash2, Check, CheckCheck, Trophy, RotateCcw, Play, Ban, User } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, CheckCheck, Trophy, RotateCcw, Play, Ban, User, AlertTriangle, LineChart, X } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -31,6 +31,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,11 +76,13 @@ import {
 import {
   dateAndTimeToISO,
   formatWorkoutDateTime,
+  formatWorkoutDay,
   quarterHourOptions,
   roundToQuarterHour,
   toDateValue,
   toTimeValue,
 } from "@/lib/utils"
+import { getExerciseSetHistory } from "../../progress/actions"
 
 const TIME_OPTIONS = quarterHourOptions()
 
@@ -180,12 +188,137 @@ function PersonalBestHint({
   )
 }
 
+type HistoryRow = Awaited<
+  ReturnType<typeof getExerciseSetHistory>
+>["rows"][number]
+
+function formatRound(r: HistoryRow): string {
+  if (r.actualReps != null && r.actualWeight != null)
+    return `${r.actualReps}×${r.actualWeight}`
+  if (r.actualReps != null) return `${r.actualReps} reps`
+  if (r.actualDuration != null) return `${r.actualDuration}s`
+  if (r.actualWeight != null) return `${r.actualWeight} lbs`
+  return "—"
+}
+
+// A click-to-open popover showing the client's recent completed performances of
+// this exercise (last ~6 sessions). Fetches lazily on first open — same pattern
+// as PersonalBestHint — and caches the result.
+function ExerciseHistoryFlyout({
+  clientId,
+  exerciseId,
+  exerciseName,
+}: {
+  clientId: string
+  exerciseId: string
+  exerciseName: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [rows, setRows] = useState<HistoryRow[] | null>(null)
+
+  useEffect(() => {
+    if (!open || rows !== null) return
+    let active = true
+    getExerciseSetHistory(exerciseId, clientId).then((res) => {
+      if (active) setRows(res.rows)
+    })
+    return () => {
+      active = false
+    }
+  }, [open, exerciseId, clientId, rows])
+
+  // Derived: we're fetching while the popover is open but rows haven't arrived.
+  const loading = open && rows === null
+
+  // Rows come back newest-first; group into sessions by date and keep the most
+  // recent six. (Map preserves the newest-first insertion order.)
+  const sessions = useMemo(() => {
+    if (!rows) return []
+    const byDate = new Map<string, HistoryRow[]>()
+    for (const r of rows) {
+      const list = byDate.get(r.date) ?? []
+      list.push(r)
+      byDate.set(r.date, list)
+    }
+    return Array.from(byDate.entries())
+      .slice(0, 6)
+      .map(([date, rs]) => ({
+        date,
+        rounds: [...rs].sort((a, b) => a.order - b.order || a.round - b.round),
+      }))
+  }, [rows])
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 text-muted-foreground"
+          title={`History for ${exerciseName}`}
+        >
+          <LineChart className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-sm font-medium">History — {exerciseName}</p>
+          <PopoverClose asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 shrink-0 p-0"
+              aria-label="Close history"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </PopoverClose>
+        </div>
+        {loading && (
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        )}
+        {!loading && sessions.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            No completed history yet for this client.
+          </p>
+        )}
+        {!loading && sessions.length > 0 && (
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {sessions.map((s) => (
+              <div key={s.date} className="text-xs">
+                <p className="font-medium text-muted-foreground">
+                  {formatWorkoutDay(`${s.date}T12:00:00Z`)}
+                </p>
+                <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                  {s.rounds.map((r) => (
+                    <span key={r.id} className="inline-flex items-center gap-0.5">
+                      {formatRound(r)}
+                      {r.pbMetrics.length > 0 && (
+                        <Trophy className="h-3 w-3 text-amber-600" />
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 type Exercise = {
   id: string
   name: string
   category: string | null
   primaryMuscle: string | null
 }
+
+// A client's other uses of an exercise earlier in the same Mon–Sun week, keyed
+// by exerciseId — drives the soft "already done this week" warning.
+export type WeekRepeat = { day: string; modifier: string | null }
+export type ExercisesDoneThisWeek = Record<string, WeekRepeat[]>
 
 type Trainer = {
   id: string
@@ -239,12 +372,14 @@ export function WorkoutEditor({
   trainers,
   isTrainer = false,
   isOwner = false,
+  exercisesDoneThisWeek = {},
 }: {
   workout: Workout
   exercises: Exercise[]
   trainers: Trainer[]
   isTrainer?: boolean
   isOwner?: boolean
+  exercisesDoneThisWeek?: ExercisesDoneThisWeek
 }) {
   const router = useRouter()
   const isScheduled = workout.status === "SCHEDULED"
@@ -492,6 +627,7 @@ export function WorkoutEditor({
           disabled={isLocked}
           canEdit={canEdit}
           canLog={canLog}
+          exercisesDoneThisWeek={exercisesDoneThisWeek}
         />
       ))}
 
@@ -517,6 +653,7 @@ function SetCard({
   disabled,
   canEdit,
   canLog,
+  exercisesDoneThisWeek,
 }: {
   set: WorkoutSet
   workoutId: string
@@ -525,6 +662,7 @@ function SetCard({
   disabled: boolean
   canEdit: boolean
   canLog: boolean
+  exercisesDoneThisWeek: ExercisesDoneThisWeek
 }) {
   const groupedExercises = set.exercises.reduce((acc, ex) => {
     const key = ex.order
@@ -573,6 +711,7 @@ function SetCard({
             disabled={disabled}
             canEdit={canEdit}
             canLog={canLog}
+            exercisesDoneThisWeek={exercisesDoneThisWeek}
           />
         ))}
         {!disabled && canEdit && (
@@ -581,6 +720,7 @@ function SetCard({
             workoutId={workoutId}
             clientId={clientId}
             exercises={exercises}
+            exercisesDoneThisWeek={exercisesDoneThisWeek}
           />
         )}
       </CardContent>
@@ -595,6 +735,7 @@ function ExerciseGroup({
   disabled,
   canEdit,
   canLog,
+  exercisesDoneThisWeek,
 }: {
   rounds: SetExercise[]
   workoutId: string
@@ -602,8 +743,15 @@ function ExerciseGroup({
   disabled: boolean
   canEdit: boolean
   canLog: boolean
+  exercisesDoneThisWeek: ExercisesDoneThisWeek
 }) {
   const first = rounds[0]
+  // Flag when this same exercise is already programmed elsewhere in the client's
+  // Mon–Sun week (whether it was copied in or added by hand). Soft, informational.
+  const weekRepeats = exercisesDoneThisWeek[first.exercise.id]
+  const repeatDays = weekRepeats?.length
+    ? Array.from(new Set(weekRepeats.map((r) => r.day))).join("/")
+    : null
   const [editOpen, setEditOpen] = useState(false)
   const [liveReps, setLiveReps] = useState<number | null>(first.targetReps)
   const [liveWeight, setLiveWeight] = useState<number | null>(first.targetWeight)
@@ -640,7 +788,20 @@ function ExerciseGroup({
     <div className="border rounded-lg p-3 space-y-2">
       <div className="flex justify-between items-start">
         <div>
-          <p className="font-medium">{first.exercise.name}</p>
+          <div className="flex items-center gap-1">
+            <p className="font-medium">{first.exercise.name}</p>
+            <ExerciseHistoryFlyout
+              clientId={clientId}
+              exerciseId={first.exercise.id}
+              exerciseName={first.exercise.name}
+            />
+          </div>
+          {repeatDays && (
+            <span className="my-0.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+              <AlertTriangle className="h-3 w-3" />
+              Also done {repeatDays} this week
+            </span>
+          )}
           {first.modifier && (
             <p className="text-sm text-muted-foreground">{first.modifier}</p>
           )}
@@ -944,11 +1105,13 @@ function AddExerciseDialog({
     workoutId,
     clientId,
     exercises,
+    exercisesDoneThisWeek,
   }: {
     setId: string
     workoutId: string
     clientId: string
     exercises: Exercise[]
+    exercisesDoneThisWeek: ExercisesDoneThisWeek
   }) {
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState("")
@@ -957,10 +1120,24 @@ function AddExerciseDialog({
     const [showNewExerciseForm, setShowNewExerciseForm] = useState(false)
     const [liveReps, setLiveReps] = useState<number | null>(null)
     const [liveWeight, setLiveWeight] = useState<number | null>(null)
-  
+
     const filteredExercises = exercises.filter((e) =>
       e.name.toLowerCase().includes(search.toLowerCase())
     )
+
+    // Days this client already did a given exercise earlier this week, e.g.
+    // "Mon" or "Mon/Wed", plus any modifiers noted — for the soft repeat warning.
+    const repeatDays = (id: string) => {
+      const repeats = exercisesDoneThisWeek[id]
+      if (!repeats?.length) return null
+      return Array.from(new Set(repeats.map((r) => r.day))).join("/")
+    }
+    const repeatModifiers = (id: string) => {
+      const repeats = exercisesDoneThisWeek[id] ?? []
+      return Array.from(
+        new Set(repeats.map((r) => r.modifier).filter((m): m is string => !!m))
+      )
+    }
   
     async function handleSubmit(formData: FormData) {
       if (!selectedExercise) return
@@ -1109,6 +1286,12 @@ function AddExerciseDialog({
                                 ({exercise.primaryMuscle})
                               </span>
                             )}
+                            {repeatDays(exercise.id) && (
+                              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                <AlertTriangle className="h-3 w-3" />
+                                Done {repeatDays(exercise.id)}
+                              </span>
+                            )}
                           </button>
                         ))
                       ) : (
@@ -1132,6 +1315,17 @@ function AddExerciseDialog({
                     Selected: {selectedExercise.name}
                     {selectedExercise.primaryMuscle && ` (${selectedExercise.primaryMuscle})`}
                   </p>
+                )}
+                {selectedExercise && repeatDays(selectedExercise.id) && (
+                  <div className="flex items-start gap-2 rounded-md bg-amber-100 px-3 py-2 text-xs text-amber-800">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Already done this week ({repeatDays(selectedExercise.id)}
+                      {repeatModifiers(selectedExercise.id).length > 0 &&
+                        `, ${repeatModifiers(selectedExercise.id).join(", ")}`}
+                      ). Adding anyway is fine.
+                    </span>
+                  </div>
                 )}
               </div>
               <PersonalBestHint

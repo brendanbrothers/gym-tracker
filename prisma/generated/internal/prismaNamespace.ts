@@ -950,7 +950,8 @@ export const WorkoutSessionScalarFieldEnum = {
   updatedAt: 'updatedAt',
   clientId: 'clientId',
   trainerId: 'trainerId',
-  gymId: 'gymId'
+  gymId: 'gymId',
+  copiedFromId: 'copiedFromId'
 } as const
 
 export type WorkoutSessionScalarFieldEnum = (typeof WorkoutSessionScalarFieldEnum)[keyof typeof WorkoutSessionScalarFieldEnum]

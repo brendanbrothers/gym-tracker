@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select"
 import {
   dateAndTimeToISO,
-  formatWorkoutDateTime,
   quarterHourOptions,
   roundToQuarterHour,
   toDateValue,
@@ -31,35 +30,12 @@ import {
 
 const TIME_OPTIONS = quarterHourOptions()
 
-import { createWorkout, getRecentWorkoutsForClient } from "./actions"
+import { createWorkout } from "./actions"
 
 type User = {
   id: string
   name: string
   role: string
-}
-
-type RecentWorkout = {
-  id: string
-  date: Date
-  sets: {
-    exercises: {
-      exercise: {
-        name: string
-      }
-    }[]
-  }[]
-}
-
-function formatWorkoutSummary(workout: RecentWorkout) {
-  const exerciseNames = new Set<string>()
-  workout.sets.forEach((set) => {
-    set.exercises.forEach((ex) => {
-      exerciseNames.add(ex.exercise.name)
-    })
-  })
-  const names = Array.from(exerciseNames).join(", ")
-  return `${formatWorkoutDateTime(workout.date)} — ${names}`
 }
 
 export function NewWorkoutForm({
@@ -75,21 +51,6 @@ export function NewWorkoutForm({
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [selectedClient, setSelectedClient] = useState<string>("")
-  const [recentWorkouts, setRecentWorkouts] = useState<RecentWorkout[]>([])
-  const [loadingWorkouts, setLoadingWorkouts] = useState(false)
-
-  useEffect(() => {
-    if (!selectedClient) {
-      setRecentWorkouts([])
-      return
-    }
-
-    setLoadingWorkouts(true)
-    getRecentWorkoutsForClient(selectedClient).then((workouts) => {
-      setRecentWorkouts(workouts)
-      setLoadingWorkouts(false)
-    })
-  }, [selectedClient])
 
   async function handleSubmit(formData: FormData) {
     setError("")
@@ -119,7 +80,7 @@ export function NewWorkoutForm({
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Start New Workout</DialogTitle>
+          <DialogTitle>Create New Workout</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -186,33 +147,9 @@ export function NewWorkoutForm({
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="copyFromId">Copy from previous workout (optional)</Label>
-            <Select name="copyFromId" disabled={!selectedClient || loadingWorkouts}>
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={
-                    !selectedClient
-                      ? "Select a client first"
-                      : loadingWorkouts
-                      ? "Loading..."
-                      : "Start fresh"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="none">Start fresh</SelectItem>
-                {recentWorkouts.map((workout) => (
-                  <SelectItem key={workout.id} value={workout.id} className="whitespace-normal">
-                    {formatWorkoutSummary(workout)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating..." : "Start Workout"}
+            {loading ? "Creating..." : "Create Workout"}
           </Button>
         </form>
       </DialogContent>

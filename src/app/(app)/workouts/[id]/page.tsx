@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth"
 import { Metadata } from "next"
 import { authOptions, isTrainer as checkTrainer } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { formatWorkoutWeekday } from "@/lib/utils"
 import { WorkoutEditor } from "./workout-editor"
+import { ReferencePane } from "./reference-pane"
+import { getReferenceCandidates, getWeekSessionsForClient } from "../actions"
 
 export async function generateMetadata({
   params,
@@ -74,15 +77,71 @@ export default async function WorkoutPage({
     orderBy: { name: "asc" },
   })
 
+  // The reference pane and repeat warnings are an authoring aid for trainers
+  // while a workout is still being built or run — so they show for SCHEDULED and
+  // IN_PROGRESS (real-time tweaks), but not once it's COMPLETED/CANCELLED or for
+  // clients, where it's a plain editor.
+  const showBuildView =
+    isTrainer &&
+    (workout.status === "SCHEDULED" || workout.status === "IN_PROGRESS")
+  if (!showBuildView) {
+    return (
+      <div className="p-6">
+        <WorkoutEditor
+          workout={workout}
+          exercises={exercises}
+          trainers={trainers}
+          isTrainer={isTrainer}
+          isOwner={isOwner}
+        />
+      </div>
+    )
+  }
+
+  // Trainer build view: reference pane (left) + live editor (right).
+  const [referenceCandidates, weekSessions] = await Promise.all([
+    getReferenceCandidates(workout.clientId, workout.date, workout.id),
+    getWeekSessionsForClient(workout.clientId, workout.date, workout.id),
+  ])
+
+  // Which exercises this client already has elsewhere in the same Mon–Sun week,
+  // with the day(s) and any modifier, for the "already done this week" warning.
+  const exercisesDoneThisWeek: Record<
+    string,
+    { day: string; modifier: string | null }[]
+  > = {}
+  for (const s of weekSessions) {
+    const day = formatWorkoutWeekday(s.date)
+    for (const set of s.sets) {
+      for (const ex of set.exercises) {
+        const arr = (exercisesDoneThisWeek[ex.exerciseId] ??= [])
+        const modifier = ex.modifier ?? null
+        if (!arr.some((e) => e.day === day && e.modifier === modifier)) {
+          arr.push({ day, modifier })
+        }
+      }
+    }
+  }
+
   return (
-    <div className="p-6">
-      <WorkoutEditor
-        workout={workout}
-        exercises={exercises}
-        trainers={trainers}
-        isTrainer={isTrainer}
-        isOwner={isOwner}
+    <div className="flex gap-6 p-6">
+      <ReferencePane
+        candidates={referenceCandidates}
+        currentSessionId={workout.id}
+        clientName={workout.client.name.split(" ")[0]}
+        targetIsEmpty={workout.sets.length === 0}
+        className="w-[420px] shrink-0"
       />
+      <div className="min-w-0 flex-1 px-6">
+        <WorkoutEditor
+          workout={workout}
+          exercises={exercises}
+          trainers={trainers}
+          isTrainer={isTrainer}
+          isOwner={isOwner}
+          exercisesDoneThisWeek={exercisesDoneThisWeek}
+        />
+      </div>
     </div>
   )
 }

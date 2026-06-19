@@ -64,7 +64,7 @@ export function HomeActions({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          Create a workout for a client, optionally copying from a previous session.
+          Create a workout for a client, then build it with their previous workout alongside.
         </p>
       </CardContent>
     </Card>
@@ -122,7 +122,7 @@ function NewExerciseCard() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Exercise</DialogTitle>
+          <DialogTitle>Create New Exercise</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -231,7 +231,7 @@ function NewUserCard() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>Create New User</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
