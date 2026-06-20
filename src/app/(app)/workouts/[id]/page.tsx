@@ -130,7 +130,7 @@ export default async function WorkoutPage({
         currentSessionId={workout.id}
         clientName={workout.client.name.split(" ")[0]}
         targetIsEmpty={workout.sets.length === 0}
-        className="w-[420px] shrink-0"
+        className="w-[420px] shrink-0 self-start sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto"
       />
       <div className="min-w-0 flex-1 px-6">
         <WorkoutEditor
