@@ -35,14 +35,14 @@ function roundValue(r: Round) {
   const reps = r.actualReps ?? r.targetReps
   const weight = r.actualWeight ?? r.targetWeight
   const duration = r.actualDuration ?? r.targetDuration
-  if (reps != null && weight != null) return `${reps}×${weight}`
+  if (reps != null && weight != null) return `${weight}×${reps}`
   if (reps != null) return `${reps} reps`
   if (duration != null) return `${duration}s`
   if (weight != null) return `${weight} lbs`
   return null
 }
 
-// Per-round performance, e.g. "10×35, 10×40, 8×45".
+// Per-round performance, e.g. "35×10, 40×10, 45×8" (weight×reps).
 function performedSummary(rounds: Round[]) {
   return rounds
     .map(roundValue)

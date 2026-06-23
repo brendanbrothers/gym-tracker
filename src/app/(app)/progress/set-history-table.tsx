@@ -104,8 +104,8 @@ export function SetHistoryTable({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Set</TableHead>
-            <TableHead className="text-right">Reps</TableHead>
             {hasWeight && <TableHead className="text-right">Weight</TableHead>}
+            <TableHead className="text-right">Reps</TableHead>
             {has1RM && <TableHead className="text-right">Est. 1RM</TableHead>}
             {hasDuration && (
               <TableHead className="text-right">Duration</TableHead>
@@ -120,13 +120,6 @@ export function SetHistoryTable({
               <TableRow key={row.id} className={isBest ? "bg-muted/50" : ""}>
                 <TableCell>{formatDate(row.date)}</TableCell>
                 <TableCell>{row.order}</TableCell>
-                <TableCell className="text-right">
-                  <ValueWithTarget
-                    actual={row.actualReps}
-                    target={row.targetReps}
-                  />
-                  {pbs.has("maxRepsUnbroken") && <PbStar label="most reps" />}
-                </TableCell>
                 {hasWeight && (
                   <TableCell className="text-right">
                     <ValueWithTarget
@@ -136,6 +129,13 @@ export function SetHistoryTable({
                     {pbs.has("maxWeight") && <PbStar label="heaviest weight" />}
                   </TableCell>
                 )}
+                <TableCell className="text-right">
+                  <ValueWithTarget
+                    actual={row.actualReps}
+                    target={row.targetReps}
+                  />
+                  {pbs.has("maxRepsUnbroken") && <PbStar label="most reps" />}
+                </TableCell>
                 {has1RM && (
                   <TableCell className="text-right">
                     {row.est1RM !== null ? Math.round(row.est1RM) : "—"}

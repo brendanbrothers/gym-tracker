@@ -3,7 +3,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Pencil, Plus, Trash2, Check, CheckCheck, Trophy, RotateCcw, Play, Ban, User, AlertTriangle, LineChart, X } from "lucide-react"
+import { Pencil, Plus, Trash2, Check, CheckCheck, Trophy, RotateCcw, Play, Ban, User, AlertTriangle, History, X } from "lucide-react"
 import { toast } from "sonner"
 
 import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
@@ -155,8 +155,8 @@ function PersonalBestHint({
   if (!exerciseId || !pbs) return null
 
   const parts: string[] = []
-  if (pbs.maxRepsUnbroken) parts.push(`${pbs.maxRepsUnbroken.value} reps`)
   if (pbs.maxWeight) parts.push(`${pbs.maxWeight.value} lbs`)
+  if (pbs.maxRepsUnbroken) parts.push(`${pbs.maxRepsUnbroken.value} reps`)
   if (pbs.est1RM) parts.push(`est. 1RM ${Math.round(pbs.est1RM.value)}`)
   if (pbs.maxDuration) parts.push(`${pbs.maxDuration.value}s`)
 
@@ -194,7 +194,7 @@ type HistoryRow = Awaited<
 
 function formatRound(r: HistoryRow): string {
   if (r.actualReps != null && r.actualWeight != null)
-    return `${r.actualReps}×${r.actualWeight}`
+    return `${r.actualWeight}×${r.actualReps}`
   if (r.actualReps != null) return `${r.actualReps} reps`
   if (r.actualDuration != null) return `${r.actualDuration}s`
   if (r.actualWeight != null) return `${r.actualWeight} lbs`
@@ -257,7 +257,7 @@ function ExerciseHistoryFlyout({
           className="h-6 w-6 p-0 text-muted-foreground"
           title={`History for ${exerciseName}`}
         >
-          <LineChart className="h-4 w-4" />
+          <History className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
@@ -806,8 +806,8 @@ function ExerciseGroup({
             <p className="text-sm text-muted-foreground">{first.modifier}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            Target: {first.targetReps && `${first.targetReps} reps`}
-            {first.targetWeight && ` @ ${first.targetWeight} lbs`}
+            Target: {first.targetWeight && `${first.targetWeight} lbs`}
+            {first.targetReps && ` @ ${first.targetReps} reps`}
             {first.targetDuration && ` ${first.targetDuration}s`}
             {rounds.length > 1 && ` × ${rounds.length} rounds`}
           </p>
@@ -844,21 +844,6 @@ function ExerciseGroup({
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-2">
-                      <Label htmlFor="targetReps">Target Reps</Label>
-                      <Input
-                        id="targetReps"
-                        name="targetReps"
-                        type="number"
-                        min={0}
-                        defaultValue={first.targetReps || ""}
-                        onChange={(e) =>
-                          setLiveReps(
-                            e.target.value === "" ? null : Number(e.target.value)
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <Label htmlFor="targetWeight">Weight (lbs)</Label>
                       <Input
                         id="targetWeight"
@@ -869,6 +854,21 @@ function ExerciseGroup({
                         defaultValue={first.targetWeight || ""}
                         onChange={(e) =>
                           setLiveWeight(
+                            e.target.value === "" ? null : Number(e.target.value)
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetReps">Target Reps</Label>
+                      <Input
+                        id="targetReps"
+                        name="targetReps"
+                        type="number"
+                        min={0}
+                        defaultValue={first.targetReps || ""}
+                        onChange={(e) =>
+                          setLiveReps(
                             e.target.value === "" ? null : Number(e.target.value)
                           )
                         }
@@ -1047,18 +1047,18 @@ const RoundRow = forwardRef<
           <Input
             type="number"
             min={0}
-            placeholder="Reps"
-            value={actualReps}
-            onChange={(e) => setActualReps(e.target.value)}
+            step="any"
+            placeholder="Weight"
+            value={actualWeight}
+            onChange={(e) => setActualWeight(e.target.value)}
             className="w-20"
           />
           <Input
             type="number"
             min={0}
-            step="any"
-            placeholder="Weight"
-            value={actualWeight}
-            onChange={(e) => setActualWeight(e.target.value)}
+            placeholder="Reps"
+            value={actualReps}
+            onChange={(e) => setActualReps(e.target.value)}
             className="w-20"
           />
           <Input
@@ -1090,8 +1090,8 @@ const RoundRow = forwardRef<
       )}
       {(disabled || !canLog) && (
         <span className="text-sm">
-          {round.actualReps && `${round.actualReps} reps`}
-          {round.actualWeight && ` @ ${round.actualWeight} lbs`}
+          {round.actualWeight && `${round.actualWeight} lbs`}
+          {round.actualReps && ` @ ${round.actualReps} reps`}
           {round.notes && ` - ${round.notes}`}
           {round.completed && " ✓"}
         </span>
@@ -1349,26 +1349,11 @@ function AddExerciseDialog({
                   id="rounds"
                   name="rounds"
                   type="number"
-                  defaultValue={3}
                   min={1}
                   max={10}
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-2">
-                  <Label htmlFor="targetReps">Target Reps</Label>
-                  <Input
-                    id="targetReps"
-                    name="targetReps"
-                    type="number"
-                    min={0}
-                    onChange={(e) =>
-                      setLiveReps(
-                        e.target.value === "" ? null : Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetWeight">Weight (lbs)</Label>
                   <Input
@@ -1379,6 +1364,20 @@ function AddExerciseDialog({
                     step="any"
                     onChange={(e) =>
                       setLiveWeight(
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetReps">Target Reps</Label>
+                  <Input
+                    id="targetReps"
+                    name="targetReps"
+                    type="number"
+                    min={0}
+                    onChange={(e) =>
+                      setLiveReps(
                         e.target.value === "" ? null : Number(e.target.value)
                       )
                     }
