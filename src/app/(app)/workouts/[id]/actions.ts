@@ -442,6 +442,20 @@ export async function updateExerciseTargets(
     return { success: true, exercise }
   }
 
+  export async function updateWorkoutNotes(
+    workoutId: string,
+    notes: string
+  ) {
+    await requireTrainer()
+
+    await prisma.workoutSession.update({
+      where: { id: workoutId },
+      data: { notes: notes.trim() || null },
+    })
+
+    revalidatePath(`/workouts/${workoutId}`)
+  }
+
   export async function updateWorkoutDetails(
     workoutId: string,
     formData: FormData

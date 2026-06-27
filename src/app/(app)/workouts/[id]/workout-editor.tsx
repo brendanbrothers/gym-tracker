@@ -10,6 +10,7 @@ import type { PbHit, PbMetric, PersonalBests } from "@/lib/personal-bests"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -65,6 +66,7 @@ import {
   createExercise,
   addRound,
   updateWorkoutDetails,
+  updateWorkoutNotes,
   getClientPersonalBests,
 } from "./actions"
 
@@ -359,6 +361,7 @@ type Workout = {
   id: string
   date: Date
   status: string
+  notes: string | null
   clientId: string
   client: { name: string }
   trainer: { id: string; name: string } | null
@@ -639,6 +642,68 @@ export function WorkoutEditor({
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Circuit
+        </Button>
+      )}
+
+      <WorkoutNotes
+        workoutId={workout.id}
+        notes={workout.notes}
+        canEdit={canEdit && !isLocked}
+      />
+    </div>
+  )
+}
+
+// General trainer notes about the whole session. Editable while the workout is
+// live (trainer + not locked); shown read-only — only when present — once the
+// session is completed/cancelled or viewed by a client.
+function WorkoutNotes({
+  workoutId,
+  notes,
+  canEdit,
+}: {
+  workoutId: string
+  notes: string | null
+  canEdit: boolean
+}) {
+  const [value, setValue] = useState(notes ?? "")
+  const [saving, setSaving] = useState(false)
+  const dirty = value !== (notes ?? "")
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await updateWorkoutNotes(workoutId, value)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!canEdit) {
+    if (!notes) return null
+    return (
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Notes</p>
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+          {notes}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="workout-notes">Notes</Label>
+      <Textarea
+        id="workout-notes"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="General notes about this workout…"
+        className="min-h-24"
+      />
+      {dirty && (
+        <Button size="sm" onClick={handleSave} disabled={saving}>
+          {saving ? "Saving…" : "Save Notes"}
         </Button>
       )}
     </div>
