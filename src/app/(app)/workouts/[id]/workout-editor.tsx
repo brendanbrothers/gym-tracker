@@ -385,13 +385,30 @@ export function WorkoutEditor({
   exercisesDoneThisWeek?: ExercisesDoneThisWeek
 }) {
   const router = useRouter()
-  const isScheduled = workout.status === "SCHEDULED"
-  const isInProgress = workout.status === "IN_PROGRESS"
-  const isCompleted = workout.status === "COMPLETED"
-  const isCancelled = workout.status === "CANCELLED"
+  // Optimistic mirror of the workout status. Logging the first round advances
+  // SCHEDULED → IN_PROGRESS without a full-page revalidation. When coarse actions
+  // (start/cancel/reopen) refresh the server props, we resync during render —
+  // the documented "adjust state when a prop changes" pattern, no effect needed.
+  const [status, setStatus] = useState(workout.status)
+  const [prevStatus, setPrevStatus] = useState(workout.status)
+  if (workout.status !== prevStatus) {
+    setPrevStatus(workout.status)
+    setStatus(workout.status)
+  }
+  const isScheduled = status === "SCHEDULED"
+  const isInProgress = status === "IN_PROGRESS"
+  const isCompleted = status === "COMPLETED"
+  const isCancelled = status === "CANCELLED"
   // Completed and cancelled sessions are read-only (no logging or editing).
   const isLocked = isCompleted || isCancelled
   const [editOpen, setEditOpen] = useState(false)
+
+  // Completing a round means the session is underway. Mirror the server's
+  // SCHEDULED → IN_PROGRESS auto-advance locally so the header swaps to
+  // "Complete Workout" immediately, without re-rendering the page.
+  const handleRoundCompleted = useCallback(() => {
+    setStatus((s) => (s === "SCHEDULED" ? "IN_PROGRESS" : s))
+  }, [])
 
   // Permission flags
   const canEdit = isTrainer // Can modify workout structure
@@ -631,6 +648,7 @@ export function WorkoutEditor({
           canEdit={canEdit}
           canLog={canLog}
           exercisesDoneThisWeek={exercisesDoneThisWeek}
+          onRoundCompleted={handleRoundCompleted}
         />
       ))}
 
@@ -719,6 +737,7 @@ function SetCard({
   canEdit,
   canLog,
   exercisesDoneThisWeek,
+  onRoundCompleted,
 }: {
   set: WorkoutSet
   workoutId: string
@@ -728,6 +747,7 @@ function SetCard({
   canEdit: boolean
   canLog: boolean
   exercisesDoneThisWeek: ExercisesDoneThisWeek
+  onRoundCompleted: () => void
 }) {
   const groupedExercises = set.exercises.reduce((acc, ex) => {
     const key = ex.order
@@ -777,6 +797,7 @@ function SetCard({
             canEdit={canEdit}
             canLog={canLog}
             exercisesDoneThisWeek={exercisesDoneThisWeek}
+            onRoundCompleted={onRoundCompleted}
           />
         ))}
         {!disabled && canEdit && (
@@ -801,6 +822,7 @@ function ExerciseGroup({
   canEdit,
   canLog,
   exercisesDoneThisWeek,
+  onRoundCompleted,
 }: {
   rounds: SetExercise[]
   workoutId: string
@@ -809,6 +831,7 @@ function ExerciseGroup({
   canEdit: boolean
   canLog: boolean
   exercisesDoneThisWeek: ExercisesDoneThisWeek
+  onRoundCompleted: () => void
 }) {
   const first = rounds[0]
   // Flag when this same exercise is already programmed elsewhere in the client's
@@ -822,7 +845,14 @@ function ExerciseGroup({
   const [liveWeight, setLiveWeight] = useState<number | null>(first.targetWeight)
   const [completingAll, setCompletingAll] = useState(false)
   const roundHandles = useRef(new Map<string, RoundHandle>())
-  const allCompleted = rounds.every((r) => r.completed)
+  // Completion is tracked here, not inside each RoundRow, so the "complete all"
+  // toggle stays correct as rounds are logged. Round saves no longer revalidate
+  // the page, so the props won't reflect completion changes on their own. Seeded
+  // once from props; structural revalidations remount this group and reseed.
+  const [completedById, setCompletedById] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(rounds.map((r) => [r.id, r.completed]))
+  )
+  const allCompleted = rounds.every((r) => completedById[r.id] ?? r.completed)
 
   async function handleCompleteAll() {
     const completed = !allCompleted
@@ -1027,6 +1057,11 @@ function ExerciseGroup({
             disabled={disabled}
             canEdit={canEdit}
             canLog={canLog}
+            completed={completedById[round.id] ?? round.completed}
+            onCompletedChange={(c) =>
+              setCompletedById((m) => ({ ...m, [round.id]: c }))
+            }
+            onRoundCompleted={onRoundCompleted}
           />
         ))}
         {!disabled && canEdit && (
@@ -1055,8 +1090,23 @@ const RoundRow = forwardRef<
     disabled: boolean
     canEdit: boolean
     canLog: boolean
+    completed: boolean
+    onCompletedChange: (completed: boolean) => void
+    onRoundCompleted: () => void
   }
->(function RoundRow({ round, workoutId, disabled, canEdit, canLog }, ref) {
+>(function RoundRow(
+  {
+    round,
+    workoutId,
+    disabled,
+    canEdit,
+    canLog,
+    completed,
+    onCompletedChange,
+    onRoundCompleted,
+  },
+  ref
+) {
   // Default to target values if no actual values have been entered yet
   const [actualReps, setActualReps] = useState(
     round.actualReps?.toString() || round.targetReps?.toString() || ""
@@ -1068,26 +1118,46 @@ const RoundRow = forwardRef<
   const [pbHits, setPbHits] = useState<PbHit[]>([])
 
   const handleUpdate = useCallback(
-    async (completed: boolean) => {
+    async (nextCompleted: boolean) => {
       const formData = new FormData()
       formData.set("actualReps", actualReps)
       formData.set("actualWeight", actualWeight)
       formData.set("notes", notes)
-      formData.set("completed", completed.toString())
+      formData.set("completed", nextCompleted.toString())
       const result = await updateExercise(round.id, workoutId, formData)
+
+      // Validation failed server-side: surface it and leave completion untouched
+      // so local state never drifts from what was actually saved.
+      if (result && "error" in result && result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      // Reconcile locally — the save no longer revalidates the page.
+      onCompletedChange(nextCompleted)
+      if (nextCompleted) onRoundCompleted()
 
       const hits: PbHit[] =
         result && "pbs" in result ? result.pbs ?? [] : []
-      if (completed && hits.length > 0) {
+      if (nextCompleted && hits.length > 0) {
         setPbHits(hits)
         toast.success(`New personal best — ${round.exercise.name}! 🎉`, {
           description: hits.map(pbHitText).join(" · "),
         })
-      } else if (!completed) {
+      } else if (!nextCompleted) {
         setPbHits([])
       }
     },
-    [actualReps, actualWeight, notes, round.id, round.exercise.name, workoutId]
+    [
+      actualReps,
+      actualWeight,
+      notes,
+      round.id,
+      round.exercise.name,
+      workoutId,
+      onCompletedChange,
+      onRoundCompleted,
+    ]
   )
 
   // Let the parent ExerciseGroup trigger this row's save for "complete all".
@@ -1134,10 +1204,10 @@ const RoundRow = forwardRef<
             className="flex-1 min-w-24"
           />
           <Button
-            variant={round.completed ? "default" : "outline"}
+            variant={completed ? "default" : "outline"}
             size="sm"
-            onClick={() => handleUpdate(!round.completed)}
-            title={round.completed ? "Mark Incomplete" : "Mark Complete"}
+            onClick={() => handleUpdate(!completed)}
+            title={completed ? "Mark Incomplete" : "Mark Complete"}
           >
             <Check className="h-4 w-4" />
           </Button>

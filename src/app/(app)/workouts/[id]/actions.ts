@@ -254,7 +254,12 @@ export async function updateExercise(
     }
   }
 
-  revalidatePath(`/workouts/${workoutId}`)
+  // No revalidatePath here. Round logging is the hot path during a live workout,
+  // and revalidating would re-render the entire workout page server-side on every
+  // saved round (the heaviest CPU cost on the page). Instead the client
+  // reconciles the few affected bits — the round's completed state and the
+  // SCHEDULED → IN_PROGRESS status — locally from this return value. Structural
+  // mutations (add/delete set, target edits, status changes) still revalidate.
   return { pbs }
 }
 
