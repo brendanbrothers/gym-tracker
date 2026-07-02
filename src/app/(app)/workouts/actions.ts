@@ -134,10 +134,13 @@ export async function copyWorkoutContents(sourceId: string, targetId: string) {
 }
 
 export async function getRecentWorkoutsForClient(clientId: string) {
+  // Copy sources for the reference pane: recent completed sessions, plus
+  // cancelled ones so a trainer can re-copy a workout a client had to cancel
+  // (e.g. cancelled then rescheduled) instead of re-entering it by hand.
   return prisma.workoutSession.findMany({
     where: {
       clientId,
-      status: "COMPLETED",
+      status: { in: ["COMPLETED", "CANCELLED"] },
     },
     include: workoutContentsInclude,
     orderBy: { date: "desc" },
@@ -146,14 +149,20 @@ export async function getRecentWorkoutsForClient(clientId: string) {
 }
 
 /**
- * All of a client's other sessions in the same Mon–Sun week as `weekOf`,
- * across every status, excluding `excludeSessionId`. Drives both the
- * repeat-exercise warning and the reference pane's "this week" entries.
+ * A client's other sessions in the same Mon–Sun week as `weekOf`, excluding
+ * `excludeSessionId`. Drives both the repeat-exercise warning and the reference
+ * pane's "this week" entries.
+ *
+ * By default cancelled sessions are excluded, since for the repeat warning they
+ * didn't actually happen and shouldn't count as "already done this week". The
+ * reference pane passes `includeCancelled` so a cancelled-then-rescheduled
+ * session stays available as a copy source.
  */
 export async function getWeekSessionsForClient(
   clientId: string,
   weekOf: Date,
-  excludeSessionId: string
+  excludeSessionId: string,
+  { includeCancelled = false }: { includeCancelled?: boolean } = {}
 ) {
   const { start, end } = appTzWeekRange(weekOf)
   return prisma.workoutSession.findMany({
@@ -161,9 +170,7 @@ export async function getWeekSessionsForClient(
       clientId,
       date: { gte: start, lt: end },
       id: { not: excludeSessionId },
-      // Cancelled sessions didn't actually happen, so they shouldn't count as
-      // "already done this week" or show up as a copy source.
-      status: { not: "CANCELLED" },
+      ...(includeCancelled ? {} : { status: { not: "CANCELLED" } }),
     },
     include: workoutContentsInclude,
     orderBy: { date: "asc" },
@@ -223,7 +230,9 @@ export async function getReferenceCandidates(
 ): Promise<ReferenceCandidate[]> {
   const [recent, week] = await Promise.all([
     getRecentWorkoutsForClient(clientId),
-    getWeekSessionsForClient(clientId, weekOf, excludeSessionId),
+    getWeekSessionsForClient(clientId, weekOf, excludeSessionId, {
+      includeCancelled: true,
+    }),
   ])
 
   const byId = new Map<string, (typeof recent)[number]>()

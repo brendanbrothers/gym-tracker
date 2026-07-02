@@ -447,7 +447,7 @@ export function WorkoutEditor({
               {workout.trainer && `Trainer: ${workout.trainer.name}`}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 print:hidden">
           {canEdit && (
             <>
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -592,7 +592,9 @@ export function WorkoutEditor({
               variant="default"
               onClick={async () => {
                 await completeWorkout(workout.id)
-                router.push("/workouts")
+                // Back to the home dashboard so the trainer can pick up the
+                // next client from today's scheduled list.
+                router.push("/")
               }}
             >
               <Check className="mr-2 h-4 w-4" />
@@ -760,7 +762,7 @@ function SetCard({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 print:break-after-avoid">
         <CardTitle className="text-lg">Circuit {set.order}</CardTitle>
         {!disabled && canEdit && (
           <AlertDialog>
@@ -880,7 +882,7 @@ function ExerciseGroup({
   }
 
   return (
-    <div className="border rounded-lg p-3 space-y-2">
+    <div className="border rounded-lg p-3 space-y-2 print:break-inside-avoid">
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-1">

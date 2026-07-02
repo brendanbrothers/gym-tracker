@@ -10,16 +10,22 @@ export default function AppLayout({
 }) {
   return (
     <div className="flex flex-col min-h-screen">
-      <EnvironmentBanner />
+      <div className="print:hidden">
+        <EnvironmentBanner />
+      </div>
       <SidebarProvider>
-        <AppSidebar />
+        <div className="print:hidden">
+          <AppSidebar />
+        </div>
         <main className="flex-1 pb-16 md:pb-0">
-          <div className="hidden md:block">
+          <div className="hidden md:block print:hidden">
             <SidebarTrigger className="p-4" />
           </div>
           {children}
         </main>
-        <BottomNav />
+        <div className="print:hidden">
+          <BottomNav />
+        </div>
       </SidebarProvider>
     </div>
   )
